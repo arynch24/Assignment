@@ -5,14 +5,15 @@ import { DatabaseModule } from './database/database.module';
 import { LoggerModule } from './logger/logger.module';
 import { LoggerService } from './logger/logger.service';
 import { DatabaseService } from './database/database.service';
+import { AuthModule } from './auth/auth.module';
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { APP_GUARD } from '@nestjs/core';
-import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     DatabaseModule,
     LoggerModule,
+    AuthModule,
     ThrottlerModule.forRoot([{
       name: 'short',
       ttl: 1000,

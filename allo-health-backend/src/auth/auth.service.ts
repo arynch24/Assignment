@@ -36,6 +36,7 @@ export class AuthService {
                 // Hashing is one way encryption and have same length of string
                 password: await hash(password, 10)
             },
+            select: { id: true, name: true, email: true }   // Return only id, name and email
         });
 
         // Generate JWT token
@@ -49,7 +50,10 @@ export class AuthService {
         const { email, password } = LoginUserDto;
 
         // Find user by email
-        const user = await this.databaseService.user.findUnique({ where: { email } });
+        const user = await this.databaseService.user.findUnique({
+            where: { email }
+        });
+
         if (!user) {
             throw new NotFoundException('User not found');
         }
@@ -62,11 +66,17 @@ export class AuthService {
         // Generate JWT token
         const access_token = this.jwtService.sign({ sub: user.id, email: user.email });
 
-        return { access_token, user };
+        return { access_token, user: {
+            id: user.id, name: user.name, email: user.email
+        } };
     }
 
     async findUserById(userId: string) {
-        const user = await this.databaseService.user.findUnique({ where: { id: userId } });
+        const user = await this.databaseService.user.findUnique({
+            where: { id: userId },
+            select: { id: true, name: true, email: true }
+        });
+        
         if (!user) {
             throw new NotFoundException('User not found');
         }
