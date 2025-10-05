@@ -13,3 +13,190 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum BreakType {
+  LUNCH
+  BREAK
+  MEETING
+}
+
+enum AppointmentStatus {
+  BOOKED
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+  NO_SHOW
+}
+
+enum QueueStatus {
+  WAITING
+  WITH_DOCTOR
+  COMPLETED
+  CANCELLED
+}
+
+enum QueuePriority {
+  NORMAL
+  URGENT
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique @db.VarChar(255)
+  password  String   @db.VarChar(255)
+  name      String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  bookedAppointments Appointment[] @relation("BookedBy")
+  queueEntries       Queue[]       @relation("AddedBy")
+
+  @@map("users")
+}
+
+model Doctor {
+  id                    String   @id @default(uuid())
+  name                  String   @db.VarChar(255)
+  specialization        String   @db.VarChar(255)
+  gender                Gender
+  location              String   @db.VarChar(255)
+  phone                 String   @db.VarChar(20)
+  email                 String?  @db.VarChar(255)
+  experience            Int?
+  qualifications        String?  @db.Text
+  profilePhoto          String?  @db.VarChar(500)
+  consultationDuration  Int      @default(30) // minutes
+  maxAppointmentsPerDay Int      @default(16)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  schedules    DoctorSchedule[]
+  breaks       DoctorBreak[]
+  appointments Appointment[]
+  queueEntries Queue[]
+
+  @@map("doctors")
+}
+
+model DoctorSchedule {
+  id        String    @id @default(uuid())
+  doctorId  String
+  dayOfWeek DayOfWeek
+  startTime DateTime  @db.Time(0)
+  endTime   DateTime  @db.Time(0)
+  isWorking Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  doctor Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, dayOfWeek], name: "unique_doctor_day")
+  @@map("doctor_schedules")
+}
+
+model DoctorBreak {
+  id        String    @id @default(uuid())
+  doctorId  String
+  dayOfWeek DayOfWeek
+  startTime DateTime  @db.Time(0)
+  endTime   DateTime  @db.Time(0)
+  breakType BreakType @default(BREAK)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  doctor Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@map("doctor_breaks")
+}
+
+model Patient {
+  id           String   @id @default(uuid())
+  name         String   @db.VarChar(255)
+  age          Int
+  gender       Gender
+  phone        String   @db.VarChar(20)
+  email        String?  @db.VarChar(255)
+  address      String?  @db.Text
+  bloodGroup   String?  @db.VarChar(10)
+  medicalNotes String?  @db.Text
+  profilePhoto String?  @db.VarChar(500)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  appointments Appointment[]
+  queueEntries Queue[]
+
+  @@map("patients")
+}
+
+model Appointment {
+  id                  String            @id @default(uuid())
+  appointmentNumber   String            @unique @db.VarChar(50)
+  patientId           String
+  doctorId            String
+  appointmentDateTime DateTime          @db.Date
+  duration            Int // Duration in minutes
+  status              AppointmentStatus @default(BOOKED)
+  notes               String?           @db.Text
+  cancellationReason  String?           @db.Text
+  bookedBy            String
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  // Relations
+  patient      Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor       Doctor  @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  bookedByUser User    @relation("BookedBy", fields: [bookedBy], references: [id])
+
+  @@map("appointments")
+}
+
+model Queue {
+  id          String        @id @default(uuid())
+  queueNumber String        @unique @db.VarChar(50)
+  patientId   String
+  doctorId    String
+  status      QueueStatus   @default(WAITING)
+  priority    QueuePriority @default(NORMAL)
+  startedAt   DateTime? // When patient went to doctor
+  completedAt DateTime? // When consultation ended
+  addedBy     String
+  notes       String?       @db.Text
+  createdAt   DateTime      @default(now())
+
+  // Relations
+  patient     Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor      Doctor  @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  addedByUser User    @relation("AddedBy", fields: [addedBy], references: [id])
+
+  @@map("queue")
+}
