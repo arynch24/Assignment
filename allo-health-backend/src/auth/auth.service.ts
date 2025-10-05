@@ -3,7 +3,6 @@ import { DatabaseService } from 'src/database/database.service';
 import { JwtService } from '@nestjs/jwt';
 import { hash, compare } from 'bcrypt';
 import { ConflictException } from '@nestjs/common';
-import { Prisma } from 'generated/prisma';
 import { LoginUserDto } from './dto/login-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 
@@ -48,7 +47,7 @@ export class AuthService {
     async login(LoginUserDto: LoginUserDto) {
 
         const { email, password } = LoginUserDto;
-        
+
         // Find user by email
         const user = await this.databaseService.user.findUnique({ where: { email } });
         if (!user) {
