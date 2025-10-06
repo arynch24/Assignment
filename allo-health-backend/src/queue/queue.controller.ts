@@ -5,12 +5,12 @@ import { UpdateQueueDto } from './dto/update-queue.dto';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('queue')
 export class QueueController {
   constructor(private readonly queueService: QueueService) { }
 
   @Post()
-  @UseGuards(AuthGuard('jwt'))
   create(@Body() createQueueDto: CreateQueueDto, @Request() req) {
     return this.queueService.create(createQueueDto, req.user.id);
   }

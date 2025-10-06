@@ -17,9 +17,6 @@ export class CreateQueueDto {
     notes?: string;
 
     @IsString()
-    queueNumber: string;
-
-    @IsString()
     @IsEnum(['WAITING', 'IN_WITH_DOCTOR', 'COMPLETED', 'CANCELLED'], { message: 'Status must be one of the following values: WAITING, IN_WITH_DOCTOR, COMPLETED, CANCELLED' })
     status?: string;
 
