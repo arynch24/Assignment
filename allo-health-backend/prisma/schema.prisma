@@ -85,8 +85,8 @@ model Doctor {
   specialization        String   @db.VarChar(255)
   gender                Gender
   location              String   @db.VarChar(255)
-  phone                 String   @db.VarChar(20)
-  email                 String?  @db.VarChar(255)
+  phone                 String   @unique @db.VarChar(20)
+  email                 String?  @unique @db.VarChar(255)
   experience            Int?
   qualifications        String?  @db.Text
   profilePhoto          String?  @db.VarChar(500)
@@ -142,8 +142,8 @@ model Patient {
   name         String   @db.VarChar(255)
   age          Int
   gender       Gender
-  phone        String   @db.VarChar(20)
-  email        String?  @db.VarChar(255)
+  phone        String   @unique @db.VarChar(20)
+  email        String?  @unique @db.VarChar(255)
   address      String?  @db.Text
   bloodGroup   String?  @db.VarChar(10)
   medicalNotes String?  @db.Text

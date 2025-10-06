@@ -8,6 +8,7 @@ import { DatabaseService } from './database/database.service';
 import { AuthModule } from './auth/auth.module';
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { APP_GUARD } from '@nestjs/core';
+import { PatientModule } from './patient/patient.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { APP_GUARD } from '@nestjs/core';
       limit: 100,
     }]),
     AuthModule,
+    PatientModule,
   ],
   controllers: [AppController],
   providers: [
