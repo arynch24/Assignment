@@ -3,22 +3,23 @@ import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) { }
+    constructor(private readonly authService: AuthService, private configService: ConfigService) { }
 
     @Post('signup')
     async signup(
         @Body() createUserDto: CreateUserDto,
         @Res({ passthrough: true }) res
     ) {
-        const { access_token, user } = await this.authService.signup(createUserDto);
+        const { token, user } = await this.authService.signup(createUserDto);
 
         // Set token in httpOnly cookie
-        res.cookie('access_token', access_token, {
+        res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: this.configService.get('NODE_ENV') === 'production',
             sameSite: 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
@@ -31,12 +32,12 @@ export class AuthController {
         @Body() loginUserDto: LoginUserDto,
         @Res({ passthrough: true }) res
     ) {
-        const { access_token, user } = await this.authService.login(loginUserDto);
+        const { token, user } = await this.authService.login(loginUserDto);
 
         // Set token in httpOnly cookie
-        res.cookie('access_token', access_token, {
+        res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: this.configService.get('NODE_ENV') === 'production',
             sameSite: 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
@@ -47,7 +48,7 @@ export class AuthController {
     @Post('logout')
     @UseGuards(AuthGuard('jwt'))
     logout(@Res({ passthrough: true }) res) {
-        res.clearCookie('access_token');
+        res.clearCookie('token');
         return { message: 'Logged out successfully' };
     }
 

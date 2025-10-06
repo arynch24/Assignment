@@ -40,9 +40,9 @@ export class AuthService {
         });
 
         // Generate JWT token
-        const access_token = this.jwtService.sign({ sub: newUser.id, email: newUser.email });
+        const token = this.jwtService.sign({ sub: newUser.id, email: newUser.email });
 
-        return { access_token, user: newUser };
+        return { token, user: newUser };
     }
 
     async login(LoginUserDto: LoginUserDto) {
@@ -64,9 +64,9 @@ export class AuthService {
             throw new ConflictException('Invalid email or password');
         }
         // Generate JWT token
-        const access_token = this.jwtService.sign({ sub: user.id, email: user.email });
+        const token = this.jwtService.sign({ sub: user.id, email: user.email });
 
-        return { access_token, user: {
+        return { token, user: {
             id: user.id, name: user.name, email: user.email
         } };
     }
