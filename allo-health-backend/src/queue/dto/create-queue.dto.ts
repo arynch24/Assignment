@@ -9,9 +9,11 @@ export class CreateQueueDto {
     doctorId: string;
 
     @IsString()
+    @IsOptional()
     priority?: string;
 
     @IsString()
+    @IsOptional()
     notes?: string;
 
     @IsString()
@@ -22,8 +24,10 @@ export class CreateQueueDto {
     status?: string;
 
     @IsDateString()
+    @IsOptional()
     startedAt?: Date;
 
     @IsDateString()
+    @IsOptional()
     completedAt?: Date;
 }
