@@ -6,7 +6,11 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true, // strips unknown properties
+    forbidNonWhitelisted: true, // throws error for extra fields
+    transform: true, // transforms payloads to DTO instances
+  }));
   
   app.enableCors({
     origin: 'http://localhost:3001', // frontend URL

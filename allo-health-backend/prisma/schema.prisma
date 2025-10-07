@@ -108,8 +108,8 @@ model DoctorSchedule {
   id        String    @id @default(uuid())
   doctorId  String
   dayOfWeek DayOfWeek
-  startTime DateTime  @db.Time(0)
-  endTime   DateTime  @db.Time(0)
+  startTime String    @db.VarChar(8) // "HH:MM:SS"
+  endTime   String    @db.VarChar(8) // "HH:MM:SS"
   isWorking Boolean   @default(true)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -125,8 +125,8 @@ model DoctorBreak {
   id        String    @id @default(uuid())
   doctorId  String
   dayOfWeek DayOfWeek
-  startTime DateTime  @db.Time(0)
-  endTime   DateTime  @db.Time(0)
+  startTime String    @db.VarChar(8) // "HH:MM:SS"
+  endTime   String    @db.VarChar(8) // "HH:MM:SS"
   breakType BreakType @default(BREAK)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

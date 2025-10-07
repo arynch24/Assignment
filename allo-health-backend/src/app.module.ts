@@ -10,6 +10,7 @@ import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { APP_GUARD } from '@nestjs/core';
 import { PatientModule } from './patient/patient.module';
 import { DoctorModule } from './doctor/doctor.module';
+import { AppointmentModule } from './appointment/appointment.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { DoctorModule } from './doctor/doctor.module';
     AuthModule,
     PatientModule,
     DoctorModule,
+    AppointmentModule,
   ],
   controllers: [AppController],
   providers: [
