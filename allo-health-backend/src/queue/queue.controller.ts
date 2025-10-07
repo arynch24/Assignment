@@ -1,3 +1,4 @@
+// src/queue/queue.controller.ts
 import {
   Controller,
   Get,
@@ -44,23 +45,30 @@ export class QueueController {
 
   // Get all queues (admin/reception view)
   @Get()
-  getAllQueues(@Query('status') status?: QueueStatus) {
-    return this.queueService.getAllQueues(status);
+  async getAllQueues(
+    @Query('status') status?: QueueStatus,
+    @Query('date') date?: string, // Format: YYYY-MM-DD
+  ) {
+    return this.queueService.getAllQueues(status, date);
   }
 
   // Get specific doctor's queue
   @Get('doctor/:doctorId')
-  getDoctorQueue(
+  async getDoctorQueue(
     @Param('doctorId') doctorId: string,
     @Query('status') status?: QueueStatus,
+    @Query('date') date?: string, // Format: YYYY-MM-DD
   ) {
-    return this.queueService.getDoctorQueue(doctorId, status);
+    return this.queueService.getDoctorQueue(doctorId, status, date);
   }
 
   // Get doctor's queue statistics
   @Get('doctor/:doctorId/stats')
-  getDoctorQueueStats(@Param('doctorId') doctorId: string) {
-    return this.queueService.getDoctorQueueStats(doctorId);
+  async getDoctorQueueStats(
+    @Param('doctorId') doctorId: string,
+    @Query('date') date?: string, // Format: YYYY-MM-DD
+  ) {
+    return this.queueService.getDoctorQueueStats(doctorId, date);
   }
 
   // Call next patient for a doctor

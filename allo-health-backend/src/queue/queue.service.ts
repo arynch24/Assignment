@@ -155,8 +155,15 @@ export class QueueService {
   }
 
   // Get doctor's queue with intelligent sorting
-  async getDoctorQueue(doctorId: string, status?: QueueStatus) {
+  async getDoctorQueue(doctorId: string, status?: QueueStatus, date?: string) {
     const where: any = { doctorId };
+
+    // Date filter - default to today
+    const filterDate = date ? new Date(date) : new Date();
+    where.createdAt = {
+      gte: startOfDay(filterDate),
+      lte: endOfDay(filterDate),
+    };
 
     if (status) {
       where.status = status;
@@ -227,8 +234,15 @@ export class QueueService {
   }
 
   // Get all queues (for admin/reception)
-  async getAllQueues(status?: QueueStatus) {
+  async getAllQueues(status?: QueueStatus, date?: string) {
     const where: any = {};
+    
+    // Date filter - default to today
+    const filterDate = date ? new Date(date) : new Date();
+    where.createdAt = {
+      gte: startOfDay(filterDate),
+      lte: endOfDay(filterDate),
+    };
     
     if (status) {
       where.status = status;
@@ -380,23 +394,37 @@ export class QueueService {
   }
 
   // Get queue statistics for a doctor
-  async getDoctorQueueStats(doctorId: string) {
-    const today = new Date();
+  async getDoctorQueueStats(doctorId: string, date?: string) {
+    const filterDate = date ? new Date(date) : new Date();
     
     const [waiting, withDoctor, completed, cancelled] = await Promise.all([
       this.databaseService.queue.count({
-        where: { doctorId, status: QueueStatus.WAITING },
+        where: { 
+          doctorId, 
+          status: QueueStatus.WAITING,
+          createdAt: {
+            gte: startOfDay(filterDate),
+            lte: endOfDay(filterDate),
+          },
+        },
       }),
       this.databaseService.queue.count({
-        where: { doctorId, status: QueueStatus.WITH_DOCTOR },
+        where: { 
+          doctorId, 
+          status: QueueStatus.WITH_DOCTOR,
+          createdAt: {
+            gte: startOfDay(filterDate),
+            lte: endOfDay(filterDate),
+          },
+        },
       }),
       this.databaseService.queue.count({
         where: {
           doctorId,
           status: QueueStatus.COMPLETED,
           createdAt: {
-            gte: startOfDay(today),
-            lte: endOfDay(today),
+            gte: startOfDay(filterDate),
+            lte: endOfDay(filterDate),
           },
         },
       }),
@@ -405,18 +433,19 @@ export class QueueService {
           doctorId,
           status: QueueStatus.CANCELLED,
           createdAt: {
-            gte: startOfDay(today),
-            lte: endOfDay(today),
+            gte: startOfDay(filterDate),
+            lte: endOfDay(filterDate),
           },
         },
       }),
     ]);
 
     return {
+      date: filterDate.toISOString().split('T')[0],
       waiting,
       withDoctor,
-      completedToday: completed,
-      cancelledToday: cancelled,
+      completed,
+      cancelled,
       total: waiting + withDoctor,
     };
   }
