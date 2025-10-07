@@ -1,4 +1,3 @@
-// src/queue/queue.service.ts
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateQueueDto } from './dto/create-queue.dto';
