@@ -11,8 +11,6 @@ export class AppointmentService {
 
   async create(createAppointmentDto: CreateAppointmentDto, userId: string) {
 
-    Logger.log("userid:",userId)
-
     const aptCount = await this.databaseService.appointment.count({
       where: {
         appointmentDateTime: {
