@@ -60,6 +60,11 @@ enum QueuePriority {
   URGENT
 }
 
+enum QueueType {
+  WALK_IN
+  APPOINTMENT
+}
+
 // ============================================
 // MODELS
 // ============================================
@@ -163,7 +168,7 @@ model Appointment {
   appointmentNumber   String            @unique @db.VarChar(50)
   patientId           String
   doctorId            String
-  appointmentDateTime DateTime          
+  appointmentDateTime DateTime
   duration            Int // Duration in minutes
   status              AppointmentStatus @default(BOOKED)
   notes               String?           @db.Text
@@ -176,27 +181,31 @@ model Appointment {
   patient      Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
   doctor       Doctor  @relation(fields: [doctorId], references: [id], onDelete: Cascade)
   bookedByUser User    @relation("BookedBy", fields: [bookedBy], references: [id])
+  Queue        Queue[]
 
   @@map("appointments")
 }
 
 model Queue {
-  id          String        @id @default(uuid())
-  queueNumber String        @unique @db.VarChar(50)
-  patientId   String
-  doctorId    String
-  status      QueueStatus   @default(WAITING)
-  priority    QueuePriority @default(NORMAL)
-  startedAt   DateTime? // When patient went to doctor
-  completedAt DateTime? // When consultation ended
-  addedBy     String
-  notes       String?       @db.Text
-  createdAt   DateTime      @default(now())
+  id            String        @id @default(uuid())
+  queueNumber   String        @unique @db.VarChar(50)
+  patientId     String
+  doctorId      String
+  status        QueueStatus   @default(WAITING)
+  priority      QueuePriority @default(NORMAL)
+  appointmentId String? // Reference to appointment if it's an appointment-based queue entry
+  type          QueueType     @default(WALK_IN) // NEW: Distinguish between walk-in and appointment
+  startedAt     DateTime? // When patient went to doctor
+  completedAt   DateTime? // When consultation ended
+  addedBy       String
+  notes         String?       @db.Text
+  createdAt     DateTime      @default(now())
 
   // Relations
-  patient     Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  doctor      Doctor  @relation(fields: [doctorId], references: [id], onDelete: Cascade)
-  addedByUser User    @relation("AddedBy", fields: [addedBy], references: [id])
+  patient     Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor      Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  addedByUser User         @relation("AddedBy", fields: [addedBy], references: [id])
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
 
   @@map("queue")
 }

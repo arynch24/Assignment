@@ -11,6 +11,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { PatientModule } from './patient/patient.module';
 import { DoctorModule } from './doctor/doctor.module';
 import { AppointmentModule } from './appointment/appointment.module';
+import { QueueModule } from './queue/queue.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { AppointmentModule } from './appointment/appointment.module';
     PatientModule,
     DoctorModule,
     AppointmentModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [

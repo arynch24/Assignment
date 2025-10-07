@@ -1,37 +1,86 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { QueueService } from './queue.service';
 import { CreateQueueDto } from './dto/create-queue.dto';
-import { UpdateQueueDto } from './dto/update-queue.dto';
-import { UseGuards } from '@nestjs/common';
+import { AddAppointmentToQueueDto } from './dto/add-appointment-to-queue.dto';
+import { UpdateQueueStatusDto } from './dto/update-queue-status.dto';
+import { QueueStatus } from 'generated/prisma';
 import { AuthGuard } from '@nestjs/passport';
+import { Request } from '@nestjs/common/decorators';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('queue')
 export class QueueController {
   constructor(private readonly queueService: QueueService) { }
 
-  @Post()
-  create(@Body() createQueueDto: CreateQueueDto, @Request() req) {
-    return this.queueService.create(createQueueDto, req.user.id);
+  // Add walk-in patient to queue
+  @Post('walk-in')
+  addWalkIn(
+    @Body() createQueueDto: CreateQueueDto,
+    @Request() req
+  ) {
+    const userId = req.user.userId;
+    return this.queueService.addWalkInToQueue(createQueueDto, userId);
   }
 
+  // Add patient with appointment to queue
+  @Post('appointment')
+  addAppointment(
+    @Body() dto: AddAppointmentToQueueDto,
+    @Request() req
+  ) {
+    const userId = req.user.userId;
+    return this.queueService.addAppointmentToQueue(dto, userId);
+  }
+
+  // Get all queues (admin/reception view)
   @Get()
-  findAll() {
-    return this.queueService.findAll();
+  getAllQueues(@Query('status') status?: QueueStatus) {
+    return this.queueService.getAllQueues(status);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.queueService.findOne(+id);
+  // Get specific doctor's queue
+  @Get('doctor/:doctorId')
+  getDoctorQueue(
+    @Param('doctorId') doctorId: string,
+    @Query('status') status?: QueueStatus,
+  ) {
+    return this.queueService.getDoctorQueue(doctorId, status);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateQueueDto: UpdateQueueDto) {
-    return this.queueService.update(id, updateQueueDto);
+  // Get doctor's queue statistics
+  @Get('doctor/:doctorId/stats')
+  getDoctorQueueStats(@Param('doctorId') doctorId: string) {
+    return this.queueService.getDoctorQueueStats(doctorId);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.queueService.remove(id);
+  // Call next patient for a doctor
+  @Post('doctor/:doctorId/next')
+  callNextPatient(@Param('doctorId') doctorId: string) {
+    return this.queueService.callNextPatient(doctorId);
+  }
+
+  // Update queue status
+  @Patch(':queueId/status')
+  updateQueueStatus(
+    @Param('queueId') queueId: string,
+    @Body() dto: UpdateQueueStatusDto,
+  ) {
+    return this.queueService.updateQueueStatus(queueId, dto);
+  }
+
+  // Remove/Cancel queue entry
+  @Delete(':queueId')
+  removeFromQueue(@Param('queueId') queueId: string) {
+    return this.queueService.removeFromQueue(queueId);
   }
 }

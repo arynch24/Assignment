@@ -1,133 +1,448 @@
-import { Injectable } from '@nestjs/common';
-import { CreateQueueDto } from './dto/create-queue.dto';
-import { UpdateQueueDto } from './dto/update-queue.dto';
+// src/queue/queue.service.ts
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
+import { CreateQueueDto } from './dto/create-queue.dto';
+import { AddAppointmentToQueueDto } from './dto/add-appointment-to-queue.dto';
+import { UpdateQueueStatusDto } from './dto/update-queue-status.dto';
+import { QueueStatus, QueuePriority, QueueType, AppointmentStatus } from 'generated/prisma';
 import { startOfDay, endOfDay } from 'date-fns';
 
 @Injectable()
 export class QueueService {
-  constructor(private databaseService: DatabaseService) { }
+  constructor(private readonly databaseService: DatabaseService) {}
 
-  async create(createQueueDto: CreateQueueDto, userId: string) {
-    const { patientId, doctorId, priority, notes } = createQueueDto;
-
-    // Generate queue number based on existing queues for the day
-    const today = new Date().toISOString().split('T')[0].replace(/-/g, ''); // "20251006"
-    const lastQueueRecord = await this.databaseService.queue.findFirst({
+  // Generate queue number based on doctor and today's count
+  private async generateQueueNumber(doctorId: string): Promise<string> {
+    const today = new Date();
+    const count = await this.databaseService.queue.count({
       where: {
+        doctorId,
         createdAt: {
-          gte: startOfDay(new Date()),
-          lt: endOfDay(new Date())
+          gte: startOfDay(today),
+          lte: endOfDay(today),
         },
       },
-      orderBy: {
-        createdAt: 'desc',
+    });
+
+    const queueNum = (count + 1).toString().padStart(3, '0');
+    const dateStr = today.toISOString().split('T')[0].replace(/-/g, '');
+    return `Q-${doctorId.slice(0, 8)}-${dateStr}-${queueNum}`;
+  }
+
+  // Add walk-in patient to queue
+  async addWalkInToQueue(createQueueDto: CreateQueueDto, userId: string) {
+    const { patientId, doctorId, priority = QueuePriority.NORMAL, notes } = createQueueDto;
+
+    // Verify patient exists
+    const patient = await this.databaseService.patient.findUnique({
+      where: { id: patientId },
+    });
+    if (!patient) {
+      throw new NotFoundException('Patient not found');
+    }
+
+    // Verify doctor exists
+    const doctor = await this.databaseService.doctor.findUnique({
+      where: { id: doctorId },
+    });
+    if (!doctor) {
+      throw new NotFoundException('Doctor not found');
+    }
+
+    // Check if patient is already in queue for this doctor
+    const existingQueue = await this.databaseService.queue.findFirst({
+      where: {
+        patientId,
+        doctorId,
+        status: {
+          in: [QueueStatus.WAITING, QueueStatus.WITH_DOCTOR],
+        },
       },
     });
-    const lastQueue = lastQueueRecord?.queueNumber || `Q-${today}-000`; // "20251006-005"
 
-    // Increment the last queue number
-    const nextNumber = String(parseInt(lastQueue.split('-')[2]) + 1).padStart(3, '0');
-    const nextQueue = `Q-${today}-${nextNumber}`; // "20251006-006"
+    if (existingQueue) {
+      throw new BadRequestException('Patient is already in queue for this doctor');
+    }
+
+    const queueNumber = await this.generateQueueNumber(doctorId);
 
     return this.databaseService.queue.create({
       data: {
+        queueNumber,
         patientId,
         doctorId,
-        priority: priority as any,
+        type: QueueType.WALK_IN,
+        priority,
         notes,
-        queueNumber: nextQueue,
         addedBy: userId,
       },
-      select: {
-        id: true,
-        queueNumber: true,
-        patient: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        doctor: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        status: true,
-        priority: true,
-        notes: true,
-        createdAt: true,
-        addedBy: true,
+      include: {
+        patient: true,
+        doctor: true,
       },
     });
   }
 
-  findAll() {
-    return this.databaseService.queue.findMany({
+  // Add patient with appointment to queue
+  async addAppointmentToQueue(dto: AddAppointmentToQueueDto, userId: string) {
+    const { appointmentId, doctorId, notes } = dto;
+
+    // Fetch appointment
+    const appointment = await this.databaseService.appointment.findUnique({
+      where: { id: appointmentId },
+      include: { patient: true, doctor: true },
+    });
+
+    if (!appointment) {
+      throw new NotFoundException('Appointment not found');
+    }
+
+    if (appointment.doctorId !== doctorId) {
+      throw new BadRequestException('Appointment is not for this doctor');
+    }
+
+    if (appointment.status === AppointmentStatus.CANCELLED) {
+      throw new BadRequestException('Appointment is cancelled');
+    }
+
+    if (appointment.status === AppointmentStatus.COMPLETED) {
+      throw new BadRequestException('Appointment is already completed');
+    }
+
+    // Check if already in queue
+    const existingQueue = await this.databaseService.queue.findFirst({
       where: {
-        createdAt: {
-          gte: startOfDay(new Date()),
-          lt: endOfDay(new Date())
+        patientId: appointment.patientId,
+        doctorId,
+        status: {
+          in: [QueueStatus.WAITING, QueueStatus.WITH_DOCTOR],
         },
       },
-      orderBy: {
-        createdAt: 'desc',
+    });
+
+    if (existingQueue) {
+      throw new BadRequestException('Patient is already in queue for this doctor');
+    }
+
+    const queueNumber = await this.generateQueueNumber(doctorId);
+
+    // Create queue entry with appointment reference
+    const queue = await this.databaseService.queue.create({
+      data: {
+        queueNumber,
+        patientId: appointment.patientId,
+        doctorId,
+        appointmentId: appointment.id,
+        type: QueueType.APPOINTMENT,
+        priority: QueuePriority.NORMAL, // Appointments use NORMAL priority, sorted by appointment time
+        notes: notes || `Appointment: ${appointment.appointmentNumber}`,
+        addedBy: userId,
       },
-      select: {
-        id: true,
-        queueNumber: true,
-        patient: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        doctor: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        status: true,
-        priority: true,
-        startedAt: true,
-        completedAt: true,
-        notes: true,
-        createdAt: true,
-        addedBy: true,
+      include: {
+        patient: true,
+        doctor: true,
+        appointment: true,
       },
+    });
+
+    // Update appointment status to checked-in
+    // await this.databaseService.appointment.update({
+    //   where: { id: appointmentId },
+    //   data: { status: AppointmentStatus.CHECKED_IN },
+    // });
+
+    return queue;
+  }
+
+  // Get doctor's queue with intelligent sorting
+  async getDoctorQueue(doctorId: string, status?: QueueStatus) {
+    const where: any = { doctorId };
+
+    if (status) {
+      where.status = status;
+    } 
+
+    const queue = await this.databaseService.queue.findMany({
+      where,
+      include: {
+        patient: true,
+        doctor: true,
+        appointment: true, // Include appointment to access appointmentDateTime
+      },
+    });
+
+    // Custom sorting logic in memory
+    const sortedQueue = queue.sort((a, b) => {
+      // 1. First sort by status (WITH_DOCTOR comes first)
+      if (a.status === QueueStatus.WITH_DOCTOR && b.status !== QueueStatus.WITH_DOCTOR) return -1;
+      if (a.status !== QueueStatus.WITH_DOCTOR && b.status === QueueStatus.WITH_DOCTOR) return 1;
+
+      // 2. Then by priority (URGENT comes before NORMAL)
+      if (a.priority === QueuePriority.URGENT && b.priority !== QueuePriority.URGENT) return -1;
+      if (a.priority !== QueuePriority.URGENT && b.priority === QueuePriority.URGENT) return 1;
+
+      // 3. For NORMAL priority, separate logic for appointments vs walk-ins
+      if (a.priority === QueuePriority.NORMAL && b.priority === QueuePriority.NORMAL) {
+        // Both are appointments - sort by appointment time
+        if (a.type === QueueType.APPOINTMENT && b.type === QueueType.APPOINTMENT) {
+          const aTime = a.appointment?.appointmentDateTime?.getTime() || 0;
+          const bTime = b.appointment?.appointmentDateTime?.getTime() || 0;
+          return aTime - bTime;
+        }
+
+        // Appointment comes before walk-in if appointment time is in the past or near current time
+        if (a.type === QueueType.APPOINTMENT && b.type === QueueType.WALK_IN) {
+          const appointmentTime = a.appointment?.appointmentDateTime?.getTime() || 0;
+          const now = Date.now();
+          const walkInTime = b.createdAt.getTime();
+          
+          // If appointment time is before walk-in arrival, appointment goes first
+          if (appointmentTime <= walkInTime) return -1;
+          // Otherwise walk-in goes first
+          return 1;
+        }
+
+        if (a.type === QueueType.WALK_IN && b.type === QueueType.APPOINTMENT) {
+          const appointmentTime = b.appointment?.appointmentDateTime?.getTime() || 0;
+          const now = Date.now();
+          const walkInTime = a.createdAt.getTime();
+          
+          // If appointment time is before walk-in arrival, appointment goes first
+          if (appointmentTime <= walkInTime) return 1;
+          // Otherwise walk-in goes first
+          return -1;
+        }
+
+        // Both are walk-ins - sort by arrival time (createdAt)
+        if (a.type === QueueType.WALK_IN && b.type === QueueType.WALK_IN) {
+          return a.createdAt.getTime() - b.createdAt.getTime();
+        }
+      }
+
+      // Default: sort by createdAt
+      return a.createdAt.getTime() - b.createdAt.getTime();
+    });
+
+    return sortedQueue;
+  }
+
+  // Get all queues (for admin/reception)
+  async getAllQueues(status?: QueueStatus) {
+    const where: any = {};
+    
+    if (status) {
+      where.status = status;
+    }
+
+    const queues = await this.databaseService.queue.findMany({
+      where,
+      include: {
+        patient: true,
+        doctor: true,
+        // appointment: true,
+      },
+    });
+
+    // Group by doctor and sort each doctor's queue
+    const queuesByDoctor = queues.reduce((acc, queue) => {
+      if (!acc[queue.doctorId]) {
+        acc[queue.doctorId] = [];
+      }
+      acc[queue.doctorId].push(queue);
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    // Sort each doctor's queue using the same logic
+    Object.keys(queuesByDoctor).forEach(doctorId => {
+      queuesByDoctor[doctorId] = this.sortQueue(queuesByDoctor[doctorId]);
+    });
+
+    return queuesByDoctor;
+  }
+
+  // Helper method to sort queue
+  private sortQueue(queue: any[]) {
+    return queue.sort((a, b) => {
+      if (a.status === QueueStatus.WITH_DOCTOR && b.status !== QueueStatus.WITH_DOCTOR) return -1;
+      if (a.status !== QueueStatus.WITH_DOCTOR && b.status === QueueStatus.WITH_DOCTOR) return 1;
+
+      if (a.priority === QueuePriority.URGENT && b.priority !== QueuePriority.URGENT) return -1;
+      if (a.priority !== QueuePriority.URGENT && b.priority === QueuePriority.URGENT) return 1;
+
+      if (a.priority === QueuePriority.NORMAL && b.priority === QueuePriority.NORMAL) {
+        if (a.type === QueueType.APPOINTMENT && b.type === QueueType.APPOINTMENT) {
+          const aTime = a.appointment?.appointmentDateTime?.getTime() || 0;
+          const bTime = b.appointment?.appointmentDateTime?.getTime() || 0;
+          return aTime - bTime;
+        }
+
+        if (a.type === QueueType.APPOINTMENT && b.type === QueueType.WALK_IN) {
+          const appointmentTime = a.appointment?.appointmentDateTime?.getTime() || 0;
+          const walkInTime = b.createdAt.getTime();
+          if (appointmentTime <= walkInTime) return -1;
+          return 1;
+        }
+
+        if (a.type === QueueType.WALK_IN && b.type === QueueType.APPOINTMENT) {
+          const appointmentTime = b.appointment?.appointmentDateTime?.getTime() || 0;
+          const walkInTime = a.createdAt.getTime();
+          if (appointmentTime <= walkInTime) return 1;
+          return -1;
+        }
+
+        if (a.type === QueueType.WALK_IN && b.type === QueueType.WALK_IN) {
+          return a.createdAt.getTime() - b.createdAt.getTime();
+        }
+      }
+
+      return a.createdAt.getTime() - b.createdAt.getTime();
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} queue`;
-  }
+  // Update queue status
+  async updateQueueStatus(queueId: string, dto: UpdateQueueStatusDto) {
+    const queue = await this.databaseService.queue.findUnique({
+      where: { id: queueId },
+      include: { appointment: true },
+    });
 
-  update(id: string, updateQueueDto: UpdateQueueDto) {
-    const { status, priority, notes, patientId, doctorId, startedAt, completedAt } = updateQueueDto;
+    if (!queue) {
+      throw new NotFoundException('Queue entry not found');
+    }
 
-    // Build the data object dynamically
-    const data: any = {};
+    const updateData: any = { status: dto.status };
 
-    startedAt !== undefined && (data.startedAt = startedAt);
-    completedAt !== undefined && (data.completedAt = completedAt);
-    status !== undefined && (data.status = status as any);
-    priority !== undefined && (data.priority = priority as any);
-    notes !== undefined && (data.notes = notes);
-    patientId !== undefined && (data.patientId = patientId);
-    doctorId !== undefined && (data.doctorId = doctorId);
+    // Set timestamps based on status
+    if (dto.status === QueueStatus.WITH_DOCTOR && !queue.startedAt) {
+      updateData.startedAt = new Date();
+    }
+
+    if (dto.status === QueueStatus.COMPLETED && !queue.completedAt) {
+      updateData.completedAt = new Date();
+      
+      // If this was an appointment, mark appointment as completed
+      if (queue.appointmentId) {
+        await this.databaseService.appointment.update({
+          where: { id: queue.appointmentId },
+          data: { status: AppointmentStatus.COMPLETED },
+        });
+      }
+    }
 
     return this.databaseService.queue.update({
-      where: { id },
-      data,
+      where: { id: queueId },
+      data: updateData,
+      include: {
+        patient: true,
+        doctor: true,
+        // appointment: true,
+      },
     });
   }
 
+  // Call next patient in queue
+  async callNextPatient(doctorId: string) {
+    // First, check if there's a patient currently with doctor
+    const inProgress = await this.databaseService.queue.findFirst({
+      where: {
+        doctorId,
+        status: QueueStatus.WITH_DOCTOR,
+      },
+    });
 
-  remove(id: string) {
-    return this.databaseService.queue.delete({
-      where: { id },
+    if (inProgress) {
+      throw new BadRequestException('A patient is already with the doctor. Complete current consultation first.');
+    }
+
+    // Get all waiting patients sorted by priority
+    const waitingQueue = await this.getDoctorQueue(doctorId, QueueStatus.WAITING);
+
+    if (!waitingQueue || waitingQueue.length === 0) {
+      throw new NotFoundException('No patients waiting in queue');
+    }
+
+    // Get the first patient (already sorted by our intelligent logic)
+    const nextPatient = waitingQueue[0];
+
+    // Update status to WITH_DOCTOR
+    return this.databaseService.queue.update({
+      where: { id: nextPatient.id },
+      data: {
+        status: QueueStatus.WITH_DOCTOR,
+        startedAt: new Date(),
+      },
+      include: {
+        patient: true,
+        doctor: true,
+        // appointment: true,
+      },
+    });
+  }
+
+  // Get queue statistics for a doctor
+  async getDoctorQueueStats(doctorId: string) {
+    const today = new Date();
+    
+    const [waiting, withDoctor, completed, cancelled] = await Promise.all([
+      this.databaseService.queue.count({
+        where: { doctorId, status: QueueStatus.WAITING },
+      }),
+      this.databaseService.queue.count({
+        where: { doctorId, status: QueueStatus.WITH_DOCTOR },
+      }),
+      this.databaseService.queue.count({
+        where: {
+          doctorId,
+          status: QueueStatus.COMPLETED,
+          createdAt: {
+            gte: startOfDay(today),
+            lte: endOfDay(today),
+          },
+        },
+      }),
+      this.databaseService.queue.count({
+        where: {
+          doctorId,
+          status: QueueStatus.CANCELLED,
+          createdAt: {
+            gte: startOfDay(today),
+            lte: endOfDay(today),
+          },
+        },
+      }),
+    ]);
+
+    return {
+      waiting,
+      withDoctor,
+      completedToday: completed,
+      cancelledToday: cancelled,
+      total: waiting + withDoctor,
+    };
+  }
+
+  // Remove patient from queue (cancel)
+  async removeFromQueue(queueId: string) {
+    const queue = await this.databaseService.queue.findUnique({
+      where: { id: queueId },
+    });
+
+    if (!queue) {
+      throw new NotFoundException('Queue entry not found');
+    }
+
+    if (queue.status === QueueStatus.COMPLETED) {
+      throw new BadRequestException('Cannot remove completed queue entry');
+    }
+
+    return this.databaseService.queue.update({
+      where: { id: queueId },
+      data: { status: QueueStatus.CANCELLED },
+      include: {
+        patient: true,
+        doctor: true,
+        appointment: true,
+      },
     });
   }
 }
