@@ -163,7 +163,7 @@ model Appointment {
   appointmentNumber   String            @unique @db.VarChar(50)
   patientId           String
   doctorId            String
-  appointmentDateTime DateTime          @db.Date
+  appointmentDateTime DateTime          
   duration            Int // Duration in minutes
   status              AppointmentStatus @default(BOOKED)
   notes               String?           @db.Text
