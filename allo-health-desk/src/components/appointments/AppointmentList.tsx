@@ -45,19 +45,7 @@ export default function AppointmentList({
         }
     };
 
-    const handleDelete = async () => {
-        if (!deleteModal.appointmentId) return;
-        try {
-            await appointmentApi.deleteAppointment(deleteModal.appointmentId);
-            setDeleteModal({ isOpen: false, appointmentId: null, appointmentNumber: '' });
-            onDelete(deleteModal.appointmentId);
-            toast.success(`Appointment ${deleteModal.appointmentNumber} cancelled`);
-        } catch (error) {
-            toast.error('Failed to cancel appointment');
-        }
-    };
-
-    const handleUpdateStatus= async (appointment: Appointment) => {
+    const handleUpdateStatus = async (appointment: Appointment) => {
         try {
             const updatedAppointment = await appointmentApi.updateAppointment(appointment.id, { status: appointment.status });
             onUpdateStatus(updatedAppointment);
@@ -129,24 +117,20 @@ export default function AppointmentList({
                                             label: 'Reschedule',
                                             icon: <Calendar className="h-4 w-4 text-purple-500" />,
                                             onClick: () => onReschedule(appt),
-                                            disabled: appt.status === 'COMPLETED',
+                                            disabled: appt.status === 'COMPLETED' || appt.status === 'CANCELLED',
                                         },
                                         {
                                             label: 'Complete',
                                             icon: <CheckCircle className="h-4 w-4 text-green-500" />,
                                             onClick: () => handleUpdateStatus({ ...appt, status: 'COMPLETED' }),
-                                            disabled: appt.status === 'COMPLETED',
+                                            disabled: appt.status === 'COMPLETED' || appt.status === 'CANCELLED',
                                         },
                                         {
                                             label: 'Cancel',
                                             icon: <X className="h-4 w-4" />,
-                                            onClick: () => setDeleteModal({
-                                                isOpen: true,
-                                                appointmentId: appt.id,
-                                                appointmentNumber: appt.appointmentNumber
-                                            }),
+                                            onClick: () => handleUpdateStatus({ ...appt, status: 'CANCELLED' }),
                                             variant: 'destructive',
-                                            disabled: appt.status === 'COMPLETED',
+                                            disabled: appt.status === 'COMPLETED' || appt.status === 'CANCELLED',
                                         }
                                     ]}
                                 />
@@ -155,14 +139,6 @@ export default function AppointmentList({
                     ))}
                 </TableBody>
             </Table>
-
-            {/* Delete Confirmation Modal */}
-            <DeleteConfirmationModal
-                isOpen={deleteModal.isOpen}
-                onClose={() => setDeleteModal({ isOpen: false, appointmentId: null, appointmentNumber: '' })}
-                onConfirm={handleDelete}
-                itemName={`appointment "${deleteModal.appointmentNumber}"`}
-            />
         </div>
     );
 }
