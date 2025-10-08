@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import AppointmentFilters from '@/components/appointments/AppointmentFilters';
@@ -11,6 +11,7 @@ import AppointmentList from '@/components/appointments/AppointmentList';
 import BookAppointmentModal from '@/components/appointments/BookAppointmentModal';
 import { Appointment } from '@/types/appointment';
 import { appointmentApi } from '@/lib/api/appointmentApi';
+import Loader from '@/components/Loader';
 
 export default function AppointmentsPage() {
     const { user, isLoading: authLoading } = useAuth();
@@ -54,7 +55,7 @@ export default function AppointmentsPage() {
     };
 
     if (authLoading || loading) {
-        return <div className="flex justify-center py-10">Loading...</div>;
+        return <Loader text="Loading appointments..." />;
     }
 
     return (

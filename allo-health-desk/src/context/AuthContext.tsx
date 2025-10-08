@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import axios from '../lib/axios';
+import { useRouter } from 'next/navigation';
 
 type User = {
     id: string;
@@ -23,6 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
 
     const fetchUser = async () => {
         try {
@@ -31,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (err) {
             setUser(null);
             setError('Failed to fetch user');
+            router.push('/');
         } finally {
             setIsLoading(false);
         }

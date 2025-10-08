@@ -11,6 +11,7 @@ import DoctorQueueCard from '@/components/queue/DoctorQueueCard';
 import AddToQueueModal from '@/components/queue/AddToQueueModal';
 import { queueApi } from '@/lib/api/queueApi';
 import { QueueResponse } from '@/types/queue';
+import Loader from '@/components/Loader';
 
 export default function QueuePage() {
     const { user, isLoading: authLoading } = useAuth();
@@ -104,7 +105,7 @@ export default function QueuePage() {
     };
 
     if (authLoading || loading) {
-        return <div className="flex justify-center py-10">Loading...</div>;
+        return <Loader text="Loading queues..." />;
     }
 
     return (

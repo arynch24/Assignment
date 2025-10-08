@@ -11,6 +11,7 @@ import AddDoctorModal from '@/components/doctors/AddDoctorModal';
 import DoctorFilters from '@/components/doctors/DoctorFilter';
 import { Doctor } from '@/types/doctor';
 import { doctorApi } from '@/lib/api/doctorApi';
+import Loader from '@/components/Loader';
 
 export default function DoctorsPage() {
     const { user, isLoading: authLoading } = useAuth();
@@ -48,7 +49,7 @@ export default function DoctorsPage() {
     };
 
     if (authLoading || loading) {
-        return <div className="flex justify-center py-10">Loading...</div>;
+        return <Loader  text="Loading doctors..." />;
     }
 
     return (
