@@ -39,12 +39,70 @@ export class AppointmentService {
         bookedByUser: {
           connect: { id: userId }
         }
+      }, select: {
+        id: true,
+        appointmentNumber: true,
+        appointmentDateTime: true,
+        duration: true,
+        status: true,
+        notes: true,
+        createdAt: true,
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            gender: true,
+            age: true,
+          }
+        },
+        doctor: {
+          select: {
+            id: true,
+            name: true,
+            specialization: true,
+          }
+        }
       }
     });
   }
 
-  findAll() {
-    return this.databaseService.appointment.findMany();
+  findAll(date?: string) {
+    const filterDate = date ? new Date(date) : new Date();
+
+    const where: any = {};
+
+    where.createdAt = {
+      gte: startOfDay(filterDate),
+      lte: endOfDay(filterDate),
+    };
+
+    return this.databaseService.appointment.findMany({
+      where,
+      select: {
+        id: true,
+        appointmentNumber: true,
+        appointmentDateTime: true,
+        duration: true,
+        status: true,
+        notes: true,
+        createdAt: true,
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            gender: true,
+            age: true,
+          }
+        },
+        doctor: {
+          select: {
+            id: true,
+            name: true,
+            specialization: true,
+          }
+        }
+      }
+    });
   }
 
   findOne(id: string) {
