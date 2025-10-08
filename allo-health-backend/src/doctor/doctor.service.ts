@@ -13,41 +13,27 @@ export class DoctorService {
   async create(createDoctorDto: CreateDoctorDto) {
     const { schedule, breaks, ...rest } = createDoctorDto;
 
-    const result = await this.databaseService.$transaction(async (databaseService) => {
+    const doctor = await this.databaseService.$transaction(async (databaseService) => {
       // Create doctor
       const doctor = await databaseService.doctor.create({
         data: { ...rest },
       });
 
-      // Create schedules
-      const createSchedule = await Promise.all(
-        schedule.map((s) =>
-          databaseService.doctorSchedule.create({
-            data: { ...s, doctor: { connect: { id: doctor.id } } },
-          }),
-        ),
-      );
+      // Bulk create schedules
+      await databaseService.doctorSchedule.createMany({
+        data: schedule.map((s) => ({ ...s, doctorId: doctor.id })),
+      });
 
-      // Create breaks
-      const createBreaks = await Promise.all(
-        breaks.map((b) =>
-          databaseService.doctorBreak.create({
-            data: { ...b, doctor: { connect: { id: doctor.id } } },
-          }),
-        ),
-      );
+      // Bulk create breaks
+      await databaseService.doctorBreak.createMany({
+        data: breaks.map((b) => ({ ...b, doctorId: doctor.id })),
+      });
 
-      // Return combined result
-      return {
-        doctor,
-        schedules: createSchedule,
-        breaks: createBreaks,
-      };
+      return doctor;
     });
 
-    return result;
+    return doctor;
   }
-
 
   findAll() {
     return this.databaseService.doctor.findMany();
@@ -57,6 +43,18 @@ export class DoctorService {
     return this.databaseService.doctor.findUnique({
       where: { id }
     });
+  }
+
+  findAllSchedules(id: string) {
+    const schedules = this.databaseService.doctorSchedule.findMany({
+      where: { doctorId: id }
+    });
+
+    const breaks = this.databaseService.doctorBreak.findMany({
+      where: { doctorId: id }
+    });
+
+    return Promise.all([schedules, breaks]);
   }
 
   update(id: string, updateDoctorDto: UpdateDoctorDto) {
@@ -71,12 +69,13 @@ export class DoctorService {
     return doctor;
   }
 
-  updateSchedule(schedule: ScheduleDto[]) {
+  updateSchedule(id: string, schedule: ScheduleDto[]) {
     return Promise.all(
       schedule.map(s =>
         this.databaseService.doctorSchedule.update({
           where: {
-            id: s.id
+            id: s.id,
+            doctorId: id
           },
           data: { ...s }
         })
@@ -84,12 +83,13 @@ export class DoctorService {
     );
   }
 
-  updateBreaks(breaks: BreakDto[]) {
+  updateBreaks(id: string, breaks: BreakDto[]) {
     return Promise.all(
       breaks.map(b =>
         this.databaseService.doctorBreak.update({
           where: {
-            id: b.id
+            id: b.id,
+            doctorId: id
           },
           data: { ...b }
         })
@@ -105,7 +105,7 @@ export class DoctorService {
   async getDoctorAvailability(
     doctorId: string,
     dateString: string,
-  ){
+  ) {
     // 1. Verify doctor exists
     const doctor = await this.databaseService.doctor.findUnique({
       where: {

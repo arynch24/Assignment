@@ -5,6 +5,7 @@ import { UpdateDoctorDto } from './dto/update-doctor.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { UseGuards } from '@nestjs/common/decorators';
 import { GetAvailabilityQueryDto } from './dto/get-availability-query.dto';
+import { ScheduleDto, BreakDto } from './dto/create-doctor.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('doctor')
@@ -34,6 +35,21 @@ export class DoctorController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.doctorService.remove(id);
+  }
+
+  @Get(':id/schedulewithbreaks')
+  findAllSchedules(@Param('id') id: string) {
+    return this.doctorService.findAllSchedules(id);
+  }
+
+  @Patch(':id/schedule')
+  updateSchedules(@Param('id') id: string, @Body() schedules: ScheduleDto[]) {
+    return this.doctorService.updateSchedule(id, schedules);
+  }
+
+  @Patch(':id/breaks')
+  updateBreaks(@Param('id') id: string, @Body() breaks: BreakDto[]) {
+    return this.doctorService.updateBreaks(id, breaks);
   }
 
   @Get(':id/availability')
