@@ -13,6 +13,21 @@ export interface Doctor {
   maxAppointmentsPerDay: number;
   createdAt: string;
   updatedAt: string;
+  todayAvailability?: {
+    date: string,
+    isWorkingDay: boolean,
+    workingHours: {
+      start: string,
+      end: string
+    },
+    currentQueueCount: number,
+    estimatedQueueWaitTime: number,
+    isCurrentlyAvailable: boolean,
+    statusMessage: string,
+    totalSlotsAvailable: number,
+    totalSlotsBooked: number,
+    nextAvailableSlot: string
+  }
 }
 
 export interface Schedule {

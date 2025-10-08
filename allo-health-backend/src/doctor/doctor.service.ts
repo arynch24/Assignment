@@ -5,6 +5,7 @@ import { DatabaseService } from 'src/database/database.service';
 import { ScheduleDto } from './dto/create-doctor.dto';
 import { NotFoundException } from '@nestjs/common';
 import { AvailabilityHelper } from './helper/availability.helper'
+import { is } from 'date-fns/locale';
 
 @Injectable()
 export class DoctorService {
@@ -35,8 +36,44 @@ export class DoctorService {
     return doctor;
   }
 
-  findAll() {
-    return this.databaseService.doctor.findMany();
+  async findAll() {
+    const doctors = await this.databaseService.doctor.findMany();
+
+    // Get today's date in ISO format
+    const today = new Date().toLocaleDateString('en-CA');
+    console.log('Today:', today);
+
+    // Fetch availability for each doctor
+    const doctorsWithAvailability = await Promise.all(
+      doctors.map(async (doctor) => {
+        try {
+          const availability = await this.getDoctorAvailability(doctor.id, today);
+          return {
+            ...doctor,
+            todayAvailability: {
+              date: availability.date,
+              isWorkingDay: availability.isWorkingDay,
+              workingHours: availability.workingHours,
+              currentQueueCount: availability.currentQueueCount,
+              estimatedQueueWaitTime: availability.estimatedQueueWaitTime,
+              isCurrentlyAvailable: availability.isCurrentlyAvailable,
+              statusMessage: availability.statusMessage,
+              totalSlotsAvailable: availability.totalSlotsAvailable,
+              totalSlotsBooked: availability.totalSlotsBooked,
+              nextAvailableSlot: availability.nextAvailableSlot,
+            },
+          };
+        } catch (error) {
+          // If there's an error fetching availability, include the doctor without it
+          return {
+            ...doctor,
+            todayAvailability: null,
+          };
+        }
+      })
+    );
+
+    return doctorsWithAvailability;
   }
 
   findOne(id: string) {

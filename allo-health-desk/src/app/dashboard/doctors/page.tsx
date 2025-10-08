@@ -87,9 +87,9 @@ export default function DoctorsPage() {
                             <Calendar className="h-5 w-5 text-green-600" />
                         </div>
                         <div>
-                            {/* <p className="text-2xl font-bold">
-              {doctors.filter(d => d.schedule?.some(s => s.isWorking)).length}
-              </p> */}
+                            <p className="text-2xl font-bold">
+                                {doctors.filter(d => d.todayAvailability?.isWorkingDay).length}
+                            </p>
                             <p className="text-sm text-gray-500">Available Today</p>
                         </div>
                     </CardContent>
