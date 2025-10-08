@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const fetchUser = async () => {
         try {
-            const res = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/me`);
+            const res = await axios.get('/auth/me');
             setUser(res.data);
         } catch (err) {
             setUser(null);
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const logout = async () => {
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`);
+            await axios.post('/auth/logout');
             setUser(null);
         } catch (err) {
             console.error('Logout failed');
