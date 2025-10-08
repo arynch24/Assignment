@@ -17,6 +17,7 @@ export default function DoctorsPage() {
     const [doctors, setDoctors] = useState<Doctor[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
 
     const fetchDoctors = async () => {
         try {
@@ -37,14 +38,12 @@ export default function DoctorsPage() {
     }, [authLoading]);
 
     const handleDelete = async (id: string) => {
-        if (confirm('Are you sure you want to delete this doctor?')) {
-            try {
-                await doctorApi.deleteDoctor(id);
-                setDoctors(doctors.filter(d => d.id !== id));
-                toast.success('Doctor deleted successfully');
-            } catch (err) {
-                toast.error('Failed to delete doctor');
-            }
+        try {
+            await doctorApi.deleteDoctor(id);
+            setDoctors(doctors.filter(d => d.id !== id));
+            toast.success('Doctor deleted successfully');
+        } catch (err) {
+            toast.error('Failed to delete doctor');
         }
     };
 
@@ -110,19 +109,31 @@ export default function DoctorsPage() {
                 doctors={doctors}
                 onDelete={handleDelete}
                 onEdit={(doctor) => {
-                    // Open modal with pre-filled data
-                    // We'll handle this in AddDoctorModal
+                    setEditingDoctor(doctor);
+                    setIsAddModalOpen(true);
                 }}
             />
 
             <AddDoctorModal
                 isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
-                onAddSuccess={(newDoctor) => {
-                    setDoctors([...doctors, newDoctor]);
-                    toast.success('Doctor added successfully');
+                onClose={() => {
+                    setEditingDoctor(null);
+                    setIsAddModalOpen(false);
+                }}
+                editingDoctor={editingDoctor}
+                onAddSuccess={(updatedDoctor) => {
+                    if (editingDoctor) {
+                        // Update existing doctor
+                        setDoctors(doctors.map(d => d.id === updatedDoctor.id ? updatedDoctor : d));
+                        toast.success('Doctor updated successfully');
+                    } else {
+                        // Add new doctor
+                        setDoctors([...doctors, updatedDoctor]);
+                        toast.success('Doctor added successfully');
+                    }
                 }}
             />
+
         </div>
     );
 }
