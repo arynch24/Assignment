@@ -8,7 +8,7 @@ import { Search, Plus, Edit, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import DoctorList from '@/components/doctors/DoctorList';
 import AddDoctorModal from '@/components/doctors/AddDoctorModal';
-import DoctorFilters from '@/components/doctors/DoctorFilter';
+import DoctorFilters, { filterDoctors } from '@/components/doctors/DoctorFilter';
 import { Doctor } from '@/types/doctor';
 import { doctorApi } from '@/lib/api/doctorApi';
 import Loader from '@/components/Loader';
@@ -19,6 +19,11 @@ export default function DoctorsPage() {
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [specialization, setSpecialization] = useState('all');
+    const [availability, setAvailability] = useState('all');
+
+    const filteredDoctors = filterDoctors(doctors, searchTerm, specialization, availability);
 
     const fetchDoctors = async () => {
         try {
@@ -49,7 +54,7 @@ export default function DoctorsPage() {
     };
 
     if (authLoading || loading) {
-        return <Loader  text="Loading doctors..." />;
+        return <Loader text="Loading doctors..." />;
     }
 
     return (
@@ -104,10 +109,16 @@ export default function DoctorsPage() {
                 </Card>
             </div>
 
-            <DoctorFilters doctors={doctors} onFilterChange={setDoctors} />
-
+            <DoctorFilters
+                searchTerm={searchTerm}
+                specialization={specialization}
+                availability={availability}
+                onSearchChange={setSearchTerm}
+                onSpecializationChange={setSpecialization}
+                onAvailabilityChange={setAvailability}
+            />
             <DoctorList
-                doctors={doctors}
+                doctors={filteredDoctors}
                 onDelete={handleDelete}
                 onEdit={(doctor) => {
                     setEditingDoctor(doctor);
