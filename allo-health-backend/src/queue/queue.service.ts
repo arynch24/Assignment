@@ -170,11 +170,45 @@ export class QueueService {
 
     const queue = await this.databaseService.queue.findMany({
       where,
-      include: {
-        patient: true,
-        doctor: true,
-        appointment: true, // Include appointment to access appointmentDateTime
-      },
+      select: {
+        id: true,
+        queueNumber: true,
+        doctorId: true,
+        patientId: true,
+        status: true,
+        type: true,
+        priority: true,
+        startedAt: true,
+        completedAt: true,
+        notes: true,
+        createdAt: true,
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            age: true,
+            gender: true,
+            phone: true,
+            email: true,
+          }
+        },
+        doctor: {
+          select: {
+            id: true,
+            name: true,
+            specialization: true,
+            gender: true,
+          }
+        },
+        appointment: {
+          select: {
+            id: true,
+            appointmentNumber: true,
+            appointmentDateTime: true,
+            status: true,
+          }
+        }
+      }
     });
 
     // Custom sorting logic in memory
@@ -282,18 +316,30 @@ export class QueueService {
       }
     });
 
-    // Group by doctor and sort each doctor's queue
+    // Group by doctor and calculate waiting count
     const queuesByDoctor = queues.reduce((acc, queue) => {
-      if (!acc[queue.doctorId]) {
-        acc[queue.doctorId] = [];
+      const doctorId = queue.doctorId;
+
+      if (!acc[doctorId]) {
+        acc[doctorId] = {
+          doctor: queue.doctor,
+          waitingCount: 0,
+          queues: []
+        };
       }
-      acc[queue.doctorId].push(queue);
+
+      // Count patients with WAITING status
+      if (queue.status === QueueStatus.WAITING || queue.status === QueueStatus.WITH_DOCTOR) {
+        acc[doctorId].waitingCount++;
+      }
+
+      acc[doctorId].queues.push(queue);
       return acc;
-    }, {} as Record<string, any[]>);
+    }, {} as Record<string, any>);
 
     // Sort each doctor's queue using the same logic
     Object.keys(queuesByDoctor).forEach(doctorId => {
-      queuesByDoctor[doctorId] = this.sortQueue(queuesByDoctor[doctorId]);
+      queuesByDoctor[doctorId].queues = this.sortQueue(queuesByDoctor[doctorId].queues);
     });
 
     return queuesByDoctor;
@@ -368,15 +414,34 @@ export class QueueService {
       }
     }
 
-    return this.databaseService.queue.update({
+    const updatedQueue = await this.databaseService.queue.update({
       where: { id: queueId },
       data: updateData,
       include: {
         patient: true,
         doctor: true,
-        // appointment: true,
       },
     });
+
+    // Get count of people in queue (WAITING + WITH_DOCTOR) for this doctor today
+    const today = new Date();
+    const queueCount = await this.databaseService.queue.count({
+      where: {
+        doctorId: updatedQueue.doctorId,
+        status: {
+          in: [QueueStatus.WAITING, QueueStatus.WITH_DOCTOR],
+        },
+        createdAt: {
+          gte: startOfDay(today),
+          lte: endOfDay(today),
+        },
+      },
+    });
+
+    return {
+      ...updatedQueue,
+      queueCount,
+    };
   }
 
   // Call next patient in queue
@@ -514,7 +579,7 @@ export class QueueService {
     if (status) {
       where.status = status;
     } else {
-      where.status = 'WAITING'; 
+      where.status = 'WAITING';
     }
 
     // Get queues grouped by doctor

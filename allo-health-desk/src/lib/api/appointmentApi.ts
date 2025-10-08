@@ -1,4 +1,4 @@
-import { Appointment } from '@/types/appointment';
+import { Appointment, CreateAppointmentDto, UpdateAppointmentDto } from '@/types/appointment';
 import axios from '../axios';
 
 export const appointmentApi = {
@@ -9,12 +9,12 @@ export const appointmentApi = {
         return res.data;
     },
 
-    createAppointment: async (data: any): Promise<Appointment> => {
+    createAppointment: async (data: CreateAppointmentDto): Promise<Appointment> => {
         const res = await axios.post('/appointment', data);
         return res.data;
     },
 
-    updateAppointment: async (id: string, data: any): Promise<Appointment> => {
+    updateAppointment: async (id: string, data: UpdateAppointmentDto): Promise<Appointment> => {
         const res = await axios.patch(`/appointment/${id}`, data);
         return res.data;
     },
