@@ -80,4 +80,13 @@ export class QueueController {
   removeFromQueue(@Param('queueId') queueId: string) {
     return this.queueService.removeFromQueue(queueId);
   }
+
+  // Get all doctors with their queue counts
+  @Get('doctors/queue-count')
+  async getAllDoctorsWithQueueCount(
+    @Query('status') status?: QueueStatus,
+    @Query('date') date?: string, // Format: YYYY-MM-DD
+  ) {
+    return this.queueService.getAllDoctorsWithQueueCount(status, date);
+  }
 }

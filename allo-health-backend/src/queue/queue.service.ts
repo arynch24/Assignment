@@ -8,7 +8,7 @@ import { startOfDay, endOfDay } from 'date-fns';
 
 @Injectable()
 export class QueueService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(private readonly databaseService: DatabaseService) { }
 
   // Generate queue number based on doctor and today's count
   private async generateQueueNumber(doctorId: string): Promise<string> {
@@ -166,7 +166,7 @@ export class QueueService {
 
     if (status) {
       where.status = status;
-    } 
+    }
 
     const queue = await this.databaseService.queue.findMany({
       where,
@@ -201,7 +201,7 @@ export class QueueService {
           const appointmentTime = a.appointment?.appointmentDateTime?.getTime() || 0;
           const now = Date.now();
           const walkInTime = b.createdAt.getTime();
-          
+
           // If appointment time is before walk-in arrival, appointment goes first
           if (appointmentTime <= walkInTime) return -1;
           // Otherwise walk-in goes first
@@ -212,7 +212,7 @@ export class QueueService {
           const appointmentTime = b.appointment?.appointmentDateTime?.getTime() || 0;
           const now = Date.now();
           const walkInTime = a.createdAt.getTime();
-          
+
           // If appointment time is before walk-in arrival, appointment goes first
           if (appointmentTime <= walkInTime) return 1;
           // Otherwise walk-in goes first
@@ -235,25 +235,51 @@ export class QueueService {
   // Get all queues (for admin/reception)
   async getAllQueues(status?: QueueStatus, date?: string) {
     const where: any = {};
-    
+
     // Date filter - default to today
     const filterDate = date ? new Date(date) : new Date();
     where.createdAt = {
       gte: startOfDay(filterDate),
       lte: endOfDay(filterDate),
     };
-    
+
     if (status) {
       where.status = status;
     }
 
     const queues = await this.databaseService.queue.findMany({
       where,
-      include: {
-        patient: true,
-        doctor: true,
-        // appointment: true,
-      },
+      select: {
+        id: true,
+        queueNumber: true,
+        doctorId: true,
+        patientId: true,
+        status: true,
+        type: true,
+        priority: true,
+        startedAt: true,
+        completedAt: true,
+        notes: true,
+        createdAt: true,
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            age: true,
+            gender: true,
+            phone: true,
+            email: true,
+          }
+        },
+        doctor: {
+          select: {
+            id: true,
+            name: true,
+            specialization: true,
+            gender: true,
+          }
+        }
+      }
     });
 
     // Group by doctor and sort each doctor's queue
@@ -332,7 +358,7 @@ export class QueueService {
 
     if (dto.status === QueueStatus.COMPLETED && !queue.completedAt) {
       updateData.completedAt = new Date();
-      
+
       // If this was an appointment, mark appointment as completed
       if (queue.appointmentId) {
         await this.databaseService.appointment.update({
@@ -395,11 +421,11 @@ export class QueueService {
   // Get queue statistics for a doctor
   async getDoctorQueueStats(doctorId: string, date?: string) {
     const filterDate = date ? new Date(date) : new Date();
-    
+
     const [waiting, withDoctor, completed, cancelled] = await Promise.all([
       this.databaseService.queue.count({
-        where: { 
-          doctorId, 
+        where: {
+          doctorId,
           status: QueueStatus.WAITING,
           createdAt: {
             gte: startOfDay(filterDate),
@@ -408,8 +434,8 @@ export class QueueService {
         },
       }),
       this.databaseService.queue.count({
-        where: { 
-          doctorId, 
+        where: {
+          doctorId,
           status: QueueStatus.WITH_DOCTOR,
           createdAt: {
             gte: startOfDay(filterDate),
@@ -472,5 +498,57 @@ export class QueueService {
         appointment: true,
       },
     });
+  }
+
+  //get all doctors detail with waiting queue count for that particular date
+  async getAllDoctorsWithQueueCount(status?: QueueStatus, date?: string) {
+    // Date filter - default to today
+    const filterDate = date ? new Date(date) : new Date();
+    const where: any = {
+      createdAt: {
+        gte: startOfDay(filterDate),
+        lte: endOfDay(filterDate),
+      },
+    };
+
+    if (status) {
+      where.status = status;
+    } else {
+      where.status = 'WAITING'; 
+    }
+
+    // Get queues grouped by doctor
+    const queues = await this.databaseService.queue.findMany({
+      where,
+      select: {
+        doctorId: true,
+        doctor: {
+          select: {
+            id: true,
+            name: true,
+            specialization: true,
+            gender: true,
+          },
+        },
+      },
+    });
+
+    // Group by doctor and count
+    const doctorQueueCounts = queues.reduce((acc, queue) => {
+      const doctorId = queue.doctorId;
+
+      if (!acc[doctorId]) {
+        acc[doctorId] = {
+          ...queue.doctor,
+          waitingCount: 0,
+        };
+      }
+
+      acc[doctorId].waitingCount++;
+      return acc;
+    }, {} as Record<string, any>);
+
+    // Convert to array
+    return Object.values(doctorQueueCounts);
   }
 }
