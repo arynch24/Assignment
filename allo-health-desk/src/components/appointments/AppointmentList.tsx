@@ -62,6 +62,7 @@ export default function AppointmentList({
             <Table>
                 <TableHeader>
                     <TableRow>
+                        <TableHead>Appointment Number</TableHead>
                         <TableHead>Date & Time</TableHead>
                         <TableHead>Patient Name</TableHead>
                         <TableHead>Doctor Name</TableHead>
@@ -72,6 +73,10 @@ export default function AppointmentList({
                 <TableBody>
                     {appointments.map((appt) => (
                         <TableRow key={appt.id}>
+                            <TableCell>
+                                <div className="font-medium">{appt.appointmentNumber}</div>
+                                <div className="text-xs text-gray-500">{appt.reason}</div>
+                            </TableCell>
                             <TableCell>
                                 <div className="font-medium">{format(new Date(appt.appointmentDateTime), 'hh:mm a')}</div>
                                 <div className="text-xs text-gray-500">{format(new Date(appt.appointmentDateTime), 'MMM d, yyyy')}</div>
@@ -85,7 +90,7 @@ export default function AppointmentList({
                                     <div>
                                         <div className="font-medium">{appt.patient.name}</div>
                                         <div className="text-xs text-gray-500">
-                                            #{appt.patient.id.slice(0, 4)} • {appt.patient.age} yrs • {appt.patient.gender}
+                                            {appt.patient.age} yrs • {appt.patient.gender}
                                         </div>
                                     </div>
                                 </div>
