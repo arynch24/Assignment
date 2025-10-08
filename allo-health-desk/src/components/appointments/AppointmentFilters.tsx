@@ -48,8 +48,8 @@ export default function AppointmentFilters({
     //     onFilterChange(filtered);
     // }, [searchTerm, doctorId, status, appointments]);
 
-    const doctors = [...new Set(appointments.map(a => a.doctor.id))];
-    const statuses = ['BOOKED', 'COMPLETED', 'CANCELLED', 'RESCHEDULED', 'NO_SHOW'];
+    // const doctors = [...new Set(appointments.map(a => a.doctor.id))];
+    const statuses = ['BOOKED', 'COMPLETED', 'CANCELLED', 'RESCHEDULED'];
 
     return (
         <div className="bg-white p-4 rounded-lg shadow mb-6">
@@ -79,9 +79,9 @@ export default function AppointmentFilters({
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="All Doctors">All Doctors</SelectItem>
-                        {doctors.map(id => (
+                        {/* {doctors.map(id => (
                             <SelectItem key={id} value={id}>{appointments.find(a => a.doctor.id === id)?.doctor.name}</SelectItem>
-                        ))}
+                        ))} */}
                     </SelectContent>
                 </Select>
 

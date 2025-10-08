@@ -45,7 +45,6 @@ enum AppointmentStatus {
   COMPLETED
   CANCELLED
   RESCHEDULED
-  NO_SHOW
 }
 
 enum QueueStatus {

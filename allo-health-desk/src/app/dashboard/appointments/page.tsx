@@ -12,6 +12,7 @@ import BookAppointmentModal from '@/components/appointments/BookAppointmentModal
 import { Appointment } from '@/types/appointment';
 import { appointmentApi } from '@/lib/api/appointmentApi';
 import Loader from '@/components/Loader';
+import RescheduleAppointmentModal from '@/components/appointments/RescheduleAppointmentModal';
 
 export default function AppointmentsPage() {
     const { user, isLoading: authLoading } = useAuth();
@@ -19,6 +20,8 @@ export default function AppointmentsPage() {
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [isBookModalOpen, setIsBookModalOpen] = useState(false);
+    const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+    const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
 
     const fetchAppointments = async () => {
         try {
@@ -41,17 +44,14 @@ export default function AppointmentsPage() {
 
     const handleAddSuccess = (newAppointment: Appointment) => {
         setAppointments([...appointments, newAppointment]);
-        toast.success('Appointment booked successfully');
     };
 
     const handleUpdateSuccess = (updatedAppointment: Appointment) => {
         setAppointments(appointments.map(a => a.id === updatedAppointment.id ? updatedAppointment : a));
-        toast.success('Appointment updated');
     };
 
     const handleDeleteSuccess = (id: string) => {
         setAppointments(appointments.filter(a => a.id !== id));
-        toast.success('Appointment cancelled');
     };
 
     if (authLoading || loading) {
@@ -117,11 +117,19 @@ export default function AppointmentsPage() {
                 appointments={appointments}
                 onUpdateStatus={handleUpdateSuccess}
                 onDelete={handleDeleteSuccess}
-                onEdit={(appointment) => {
-                    // Open modal with pre-filled data
-                    // We'll handle this in BookAppointmentModal
+                onReschedule={(appointment) => {
+                    setSelectedAppointment(appointment);
+                    setIsRescheduleModalOpen(true);
                 }}
             />
+        
+            <RescheduleAppointmentModal
+                isOpen={isRescheduleModalOpen}
+                onClose={() => setIsRescheduleModalOpen(false)}
+                appointment={selectedAppointment!}
+                onRescheduleSuccess={handleUpdateSuccess}
+            />
+
 
             <BookAppointmentModal
                 isOpen={isBookModalOpen}

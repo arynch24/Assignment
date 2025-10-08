@@ -129,7 +129,31 @@ export class AppointmentService {
 
     return this.databaseService.appointment.update({
       where: { id },
-      data: updateData
+      data: updateData,
+      select: {
+        id: true,
+        appointmentNumber: true,
+        appointmentDateTime: true,
+        duration: true,
+        status: true,
+        notes: true,
+        createdAt: true,
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            gender: true,
+            age: true,
+          }
+        },
+        doctor: {
+          select: {
+            id: true,
+            name: true,
+            specialization: true,
+          }
+        }
+      }
     });
   }
 

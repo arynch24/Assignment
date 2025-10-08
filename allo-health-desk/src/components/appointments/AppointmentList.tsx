@@ -6,23 +6,24 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import ActionMenu from '@/components/ActionMenu';
-import { Edit, Trash2 } from 'lucide-react';
+import { X, CheckCircle, Calendar } from 'lucide-react';
 import { useState } from 'react';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import { appointmentApi } from '@/lib/api/appointmentApi';
+import { Appointment } from '@/types/appointment';
 
 interface AppointmentListProps {
-    appointments: any[];
-    onUpdateStatus: (appointment: any) => void;
+    appointments: Appointment[];
+    onUpdateStatus: (appointment: Appointment) => void;
     onDelete: (id: string) => void;
-    onEdit: (appointment: any) => void;
+    onReschedule: (appointment: Appointment) => void;
 }
 
 export default function AppointmentList({
     appointments,
     onUpdateStatus,
     onDelete,
-    onEdit,
+    onReschedule,
 }: AppointmentListProps) {
     const [deleteModal, setDeleteModal] = useState<{
         isOpen: boolean;
@@ -40,7 +41,6 @@ export default function AppointmentList({
             case 'COMPLETED': return 'success';
             case 'CANCELLED': return 'destructive';
             case 'RESCHEDULED': return 'warning';
-            case 'NO_SHOW': return 'outline';
             default: return 'secondary';
         }
     };
@@ -54,6 +54,16 @@ export default function AppointmentList({
             toast.success(`Appointment ${deleteModal.appointmentNumber} cancelled`);
         } catch (error) {
             toast.error('Failed to cancel appointment');
+        }
+    };
+
+    const handleUpdateStatus= async (appointment: Appointment) => {
+        try {
+            const updatedAppointment = await appointmentApi.updateAppointment(appointment.id, { status: appointment.status });
+            onUpdateStatus(updatedAppointment);
+            toast.success(`Appointment ${appointment.appointmentNumber} marked as ${appointment.status}`);
+        } catch (error) {
+            toast.error('Failed to update appointment status');
         }
     };
 
@@ -75,7 +85,7 @@ export default function AppointmentList({
                         <TableRow key={appt.id}>
                             <TableCell>
                                 <div className="font-medium">{appt.appointmentNumber}</div>
-                                <div className="text-xs text-gray-500">{appt.reason}</div>
+                                <div className="text-xs text-gray-500">{appt.notes}</div>
                             </TableCell>
                             <TableCell>
                                 <div className="font-medium">{format(new Date(appt.appointmentDateTime), 'hh:mm a')}</div>
@@ -84,7 +94,7 @@ export default function AppointmentList({
                             <TableCell>
                                 <div className="flex items-center gap-2">
                                     <Avatar className="h-8 w-8">
-                                        <AvatarImage src={appt.patient.profilePhoto || '/avatar-placeholder.png'} alt={appt.patient.name} />
+                                        <AvatarImage src={appt.patient?.profilePhoto || '/avatar-placeholder.png'} alt={appt.patient.name} />
                                         <AvatarFallback>{appt.patient.name.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <div>
@@ -116,20 +126,28 @@ export default function AppointmentList({
                                 <ActionMenu
                                     actions={[
                                         {
-                                            label: 'Edit',
-                                            icon: <Edit className="h-4 w-4 text-blue-500" />,
-                                            onClick: () => onEdit(appt),
+                                            label: 'Reschedule',
+                                            icon: <Calendar className="h-4 w-4 text-purple-500" />,
+                                            onClick: () => onReschedule(appt),
+                                            disabled: appt.status === 'COMPLETED',
+                                        },
+                                        {
+                                            label: 'Complete',
+                                            icon: <CheckCircle className="h-4 w-4 text-green-500" />,
+                                            onClick: () => handleUpdateStatus({ ...appt, status: 'COMPLETED' }),
+                                            disabled: appt.status === 'COMPLETED',
                                         },
                                         {
                                             label: 'Cancel',
-                                            icon: <Trash2 className="h-4 w-4" />,
+                                            icon: <X className="h-4 w-4" />,
                                             onClick: () => setDeleteModal({
                                                 isOpen: true,
                                                 appointmentId: appt.id,
                                                 appointmentNumber: appt.appointmentNumber
                                             }),
                                             variant: 'destructive',
-                                        },
+                                            disabled: appt.status === 'COMPLETED',
+                                        }
                                     ]}
                                 />
                             </TableCell>

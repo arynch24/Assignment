@@ -17,6 +17,7 @@ interface DeleteConfirmationModalProps {
   onClose: () => void;
   onConfirm: () => Promise<void>;
   itemName?: string;
+  label?: string;
 }
 
 export default function DeleteConfirmationModal({
@@ -24,6 +25,7 @@ export default function DeleteConfirmationModal({
   onClose,
   onConfirm,
   itemName = 'item',
+  label = '',
 }: DeleteConfirmationModalProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
