@@ -6,9 +6,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import ActionMenu from '@/components/ActionMenu';
-import { Edit, Trash2, Eye } from 'lucide-react';
+import { Edit, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
+import { appointmentApi } from '@/lib/api/appointmentApi';
 
 interface AppointmentListProps {
     appointments: any[];
@@ -46,9 +47,10 @@ export default function AppointmentList({
 
     const handleDelete = async () => {
         if (!deleteModal.appointmentId) return;
-
         try {
-            await onDelete(deleteModal.appointmentId);
+            await appointmentApi.deleteAppointment(deleteModal.appointmentId);
+            setDeleteModal({ isOpen: false, appointmentId: null, appointmentNumber: '' });
+            onDelete(deleteModal.appointmentId);
             toast.success(`Appointment ${deleteModal.appointmentNumber} cancelled`);
         } catch (error) {
             toast.error('Failed to cancel appointment');
