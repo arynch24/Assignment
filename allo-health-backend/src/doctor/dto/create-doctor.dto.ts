@@ -1,13 +1,14 @@
 import { IsString, IsPhoneNumber, ValidateNested, IsOptional, IsEmpty, IsEmail, IsEnum, IsNumber, IsUrl, IsArray, IsBoolean, Matches } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Transform } from 'class-transformer';
+import { Specialization } from 'generated/prisma';
 
 export class CreateDoctorDto {
     @IsString()
     name: string;
 
     @IsString()
-    specialization: string;
+    @IsEnum(['SEXOLOGIST', 'UROLOGIST', 'GYNECOLOGIST', 'ANDROLOGIST', 'PSYCHOLOGIST', 'COUNSELOR', 'ENDOCRINOLOGIST'], { message: "Specialization must be one of the following values: SEXOLOGIST, UROLOGIST, GYNECOLOGIST, ANDROLOGIST, PSYCHOLOGIST, COUNSELOR, ENDOCRINOLOGIST" })
+    specialization: Specialization;
 
     @IsEnum(['MALE', 'FEMALE'], { message: "Gender must be either MALE or FEMALE" })
     gender: 'MALE' | 'FEMALE';

@@ -19,6 +19,7 @@ interface AddDoctorModalProps {
 }
 
 const daysOfWeek = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+const specializations = ['SEXOLOGIST', 'UROLOGIST', 'GYNECOLOGIST', 'ANDROLOGIST', 'PSYCHOLOGIST', 'COUNSELOR', 'ENDOCRINOLOGIST'];
 
 export default function AddDoctorModal({
     isOpen,
@@ -28,7 +29,7 @@ export default function AddDoctorModal({
 }: AddDoctorModalProps) {
     const [formData, setFormData] = useState({
         name: '',
-        specialization: '',
+        specialization: 'SEXOLOGIST',
         gender: 'MALE',
         location: '',
         phone: '',
@@ -60,7 +61,7 @@ export default function AddDoctorModal({
         if (editingDoctor) {
             setFormData({
                 name: editingDoctor.name || '',
-                specialization: editingDoctor.specialization || '',
+                specialization: editingDoctor.specialization || 'SEXOLOGIST',
                 gender: editingDoctor.gender || 'MALE',
                 location: editingDoctor.location || '',
                 phone: editingDoctor.phone || '',
@@ -76,7 +77,7 @@ export default function AddDoctorModal({
         } else {
             setFormData({
                 name: '',
-                specialization: '',
+                specialization: 'SEXOLOGIST',
                 gender: 'MALE',
                 location: '',
                 phone: '',
@@ -158,11 +159,9 @@ export default function AddDoctorModal({
                 // Update doctor details only (not schedule/breaks here — handled separately in ViewScheduleModal)
                 const { schedule, breaks, ...rest } = formData;
                 const updatedDoctor = await doctorApi.updateDoctor(editingDoctor.id, rest as any);
-                toast.success('Doctor updated');
                 onAddSuccess?.(updatedDoctor);
             } else {
                 const newDoctor = await doctorApi.addDoctor(formData as any);
-                toast.success('Doctor added');
                 onAddSuccess?.(newDoctor);
             }
             onClose();
@@ -189,11 +188,20 @@ export default function AddDoctorModal({
                         </div>
                         <div className="space-y-2">
                             <Label>Specialization</Label>
-                            <Input
+                            <Select
+
                                 value={formData.specialization}
-                                onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                                required
-                            />
+                                onValueChange={(value) => setFormData({ ...formData, specialization: value as any })}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {specializations.map(spec => (
+                                        <SelectItem key={spec} value={spec}>{spec}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="space-y-2">
                             <Label>Gender</Label>
@@ -244,6 +252,16 @@ export default function AddDoctorModal({
                                 min="0"
                             />
                         </div>
+                        <div className="space-y-2">
+                            <Label>Qualification</Label>
+                            <Input
+                                type="text"
+                                value={formData.qualifications}
+                                onChange={(e) => setFormData({ ...formData, qualifications: e.target.value })}
+                            />
+                        </div>
+
+
                         <div className="space-y-2">
                             <Label>Consultation Duration (minutes)</Label>
                             <Input

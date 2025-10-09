@@ -33,7 +33,33 @@ export class DoctorService {
       return doctor;
     });
 
-    return doctor;
+    // Get today's date in ISO format
+    const today = new Date().toLocaleDateString('en-CA');
+    
+    try {
+      const availability = await this.getDoctorAvailability(doctor.id, today);
+      return {
+        ...doctor,
+        todayAvailability: {
+          date: availability.date,
+          isWorkingDay: availability.isWorkingDay,
+          workingHours: availability.workingHours,
+          currentQueueCount: availability.currentQueueCount,
+          estimatedQueueWaitTime: availability.estimatedQueueWaitTime,
+          isCurrentlyAvailable: availability.isCurrentlyAvailable,
+          statusMessage: availability.statusMessage,
+          totalSlotsAvailable: availability.totalSlotsAvailable,
+          totalSlotsBooked: availability.totalSlotsBooked,
+          nextAvailableSlot: availability.nextAvailableSlot,
+        },
+      };
+    } catch (error) {
+      // If there's an error fetching availability, include the doctor without it
+      return {
+        ...doctor,
+        todayAvailability: null,
+      };
+    }
   }
 
   async findAll() {
@@ -41,7 +67,6 @@ export class DoctorService {
 
     // Get today's date in ISO format
     const today = new Date().toLocaleDateString('en-CA');
-    console.log('Today:', today);
 
     // Fetch availability for each doctor
     const doctorsWithAvailability = await Promise.all(

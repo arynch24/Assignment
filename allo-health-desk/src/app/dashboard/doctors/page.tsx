@@ -8,7 +8,7 @@ import { Search, Plus, Edit, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import DoctorList from '@/components/doctors/DoctorList';
 import AddDoctorModal from '@/components/doctors/AddDoctorModal';
-import DoctorFilters, { filterDoctors } from '@/components/doctors/DoctorFilter';
+import DoctorFilters, { filterDoctors, Specialization } from '@/components/doctors/DoctorFilter';
 import { Doctor } from '@/types/doctor';
 import { doctorApi } from '@/lib/api/doctorApi';
 import Loader from '@/components/Loader';
@@ -20,7 +20,7 @@ export default function DoctorsPage() {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [specialization, setSpecialization] = useState('all');
+    const [specialization, setSpecialization] = useState<Specialization | 'all'>('all');
     const [availability, setAvailability] = useState('all');
 
     const filteredDoctors = filterDoctors(doctors, searchTerm, specialization, availability);

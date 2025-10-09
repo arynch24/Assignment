@@ -64,6 +64,16 @@ enum QueueType {
   APPOINTMENT
 }
 
+enum Specialization {
+  SEXOLOGIST
+  UROLOGIST
+  GYNECOLOGIST
+  ANDROLOGIST
+  PSYCHOLOGIST
+  COUNSELOR
+  ENDOCRINOLOGIST
+}
+
 // ============================================
 // MODELS
 // ============================================
@@ -84,20 +94,20 @@ model User {
 }
 
 model Doctor {
-  id                    String   @id @default(uuid())
-  name                  String   @db.VarChar(255)
-  specialization        String   @db.VarChar(255)
+  id                    String         @id @default(uuid())
+  name                  String         @db.VarChar(255)
+  specialization        Specialization
   gender                Gender
-  location              String   @db.VarChar(255)
-  phone                 String   @unique @db.VarChar(20)
-  email                 String?  @unique @db.VarChar(255)
+  location              String         @db.VarChar(255)
+  phone                 String         @unique @db.VarChar(20)
+  email                 String?        @unique @db.VarChar(255)
   experience            Int?
-  qualifications        String?  @db.Text
-  profilePhoto          String?  @db.VarChar(500)
-  consultationDuration  Int      @default(30) // minutes
-  maxAppointmentsPerDay Int      @default(16)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  qualifications        String?        @db.Text
+  profilePhoto          String?        @db.VarChar(500)
+  consultationDuration  Int            @default(30) // minutes
+  maxAppointmentsPerDay Int            @default(16)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
 
   // Relations
   schedules    DoctorSchedule[]

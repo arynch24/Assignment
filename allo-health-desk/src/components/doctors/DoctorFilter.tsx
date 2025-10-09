@@ -4,26 +4,24 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search } from 'lucide-react';
 
-// Define specialization enums
+// Define specialization 
 export enum Specialization {
-  CARDIOLOGY = 'Cardiology',
-  DERMATOLOGY = 'Dermatology',
-  NEUROLOGY = 'Neurology',
-  ORTHOPEDICS = 'Orthopedics',
-  PEDIATRICS = 'Pediatrics',
-  PSYCHIATRY = 'Psychiatry',
-  GENERAL_MEDICINE = 'General Medicine',
-  GYNECOLOGY = 'Gynecology',
-  OPHTHALMOLOGY = 'Ophthalmology',
-  ENT = 'ENT'
+  SEXOLOGIST = 'Sexologist',
+  UROLOGIST = 'Urologist',
+  GYNECOLOGIST = 'Gynecologist',
+  ANDROLOGIST = 'Andrologist',
+  PSYCHOLOGIST = 'Psychologist',
+  COUNSELOR = 'Counselor',
+  ENDOCRINOLOGIST = 'Endocrinologist',
 }
+
 
 interface DoctorFiltersProps {
   searchTerm: string;
-  specialization: string;
+  specialization: Specialization | 'all';
   availability: string;
   onSearchChange: (value: string) => void;
-  onSpecializationChange: (value: string) => void;
+  onSpecializationChange: (value: Specialization | 'all') => void;
   onAvailabilityChange: (value: string) => void;
 }
 
@@ -94,7 +92,7 @@ export function filterDoctors(
     
     // Specialization filter
     const matchesSpecialization = specialization === 'all' || 
-      d.specialization === specialization;
+      d.specialization.toLowerCase() === specialization.toLowerCase();
     
     // Availability filter based on todayAvailability data
     let matchesAvailability = true;
