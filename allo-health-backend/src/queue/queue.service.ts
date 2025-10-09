@@ -356,6 +356,21 @@ export class QueueService {
   // Helper method to sort queue
   private sortQueue(queue: any[]) {
     return queue.sort((a, b) => {
+      // COMPLETED and CANCELLED should always be at the end
+      const aIsFinished = a.status === QueueStatus.COMPLETED || a.status === QueueStatus.CANCELLED;
+      const bIsFinished = b.status === QueueStatus.COMPLETED || b.status === QueueStatus.CANCELLED;
+
+      if (aIsFinished && !bIsFinished) return 1;  // a goes to end
+      if (!aIsFinished && bIsFinished) return -1; // b goes to end
+
+      // If both are finished, sort by completion time (most recent first)
+      if (aIsFinished && bIsFinished) {
+        const aTime = a.completedAt?.getTime() || a.createdAt.getTime();
+        const bTime = b.completedAt?.getTime() || b.createdAt.getTime();
+        return bTime - aTime; // Descending order (newest first)
+      }
+
+      // For active queues (WAITING, WITH_DOCTOR), apply existing logic
       if (a.status === QueueStatus.WITH_DOCTOR && b.status !== QueueStatus.WITH_DOCTOR) return -1;
       if (a.status !== QueueStatus.WITH_DOCTOR && b.status === QueueStatus.WITH_DOCTOR) return 1;
 
@@ -391,7 +406,7 @@ export class QueueService {
       return a.createdAt.getTime() - b.createdAt.getTime();
     });
   }
-
+  
   // Update queue status
   async updateQueueStatus(queueId: string, dto: UpdateQueueStatusDto) {
     const queue = await this.databaseService.queue.findUnique({
