@@ -134,7 +134,7 @@ export default function QueuePage() {
                         </div>
                         <div>
                             <p className="text-2xl font-bold">{totalInQueue}</p>
-                            <p className="text-sm text-gray-500">Total in Queue</p>
+                            <p className="text-sm text-gray-500">Total Patients Attended</p>
                         </div>
                     </CardContent>
                 </Card>

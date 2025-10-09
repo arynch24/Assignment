@@ -22,7 +22,15 @@ export default function QueueFilters({
 }: QueueFiltersProps) {
   return (
     <div className="bg-white p-4 rounded-lg shadow mb-6">
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="w-full flex flex-col md:flex-row gap-4">
+        <div className="w-2/3">
+          <Input
+            placeholder="Search patient name or queue number..."
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
+        </div>
+
         <div className="relative flex-1">
           <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Popover>
@@ -41,18 +49,6 @@ export default function QueueFilters({
             </PopoverContent>
           </Popover>
         </div>
-
-        <div className="relative flex-1">
-          <Input
-            placeholder="Search patient name or queue number..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-        </div>
-
-        <Button variant="outline" size="icon" className="md:hidden">
-          <CalendarIcon className="h-4 w-4" />
-        </Button>
       </div>
     </div>
   );

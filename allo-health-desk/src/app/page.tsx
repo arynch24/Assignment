@@ -7,7 +7,7 @@ import { AuthSwitcher } from '@/components/auth';
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white relative p-4 flex flex-col">
-      
+
       {/* Header */}
       <div className="flex items-center space-x-3 p-6 absolute top-0 left-0">
         <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
@@ -19,9 +19,9 @@ export default function Home() {
       {/* Main content */}
       <div className="flex items-center justify-center flex-1">
         <div className="max-w-6xl w-full grid md:grid-cols-2 gap-8 items-center">
-          
+
           {/* Left Side - Stable Image */}
-          <div className="flex justify-center items-center min-h-[500px]">
+          <div className="hidden lg:flex justify-center items-center min-h-[500px]">
             <Image
               src="/allo-health.png"
               alt="Clinic Illustration"

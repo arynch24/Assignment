@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Mail, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import axios from '@/lib/axios';
@@ -56,7 +56,7 @@ export function LoginForm() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
-        startIcon={<Eye className="w-4 h-4" />}
+        startIcon={<Lock className="w-4 h-4" />}
         endIcon={
           <button
             type="button"
