@@ -101,10 +101,6 @@ export default function RescheduleAppointmentModal({
         }
     };
 
-    if (appointment) {
-        console.log(appointment)
-    }
-
     if (!appointment) {
         return null;
     }

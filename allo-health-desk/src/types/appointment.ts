@@ -6,7 +6,7 @@ export interface Appointment {
   appointmentNumber: string;
   appointmentDateTime: string; // ISO date
   duration: number; // minutes
-  status: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'RESCHEDULED' ;
+  status: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'RESCHEDULED' | 'IN_QUEUE';
   notes?: string;
   createdAt: string;
   patient: Patient;
@@ -24,7 +24,7 @@ export interface CreateAppointmentDto {
 export interface UpdateAppointmentDto {
   doctorId?: string;
   appointmentDateTime?: string;
-  status?: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'RESCHEDULED';
+  status?: 'BOOKED' | 'COMPLETED' | 'CANCELLED' | 'RESCHEDULED' | 'IN_QUEUE';
 }
 
 export interface DoctorAvailabilityResponse {

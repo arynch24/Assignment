@@ -56,6 +56,7 @@ export default function AppointmentFilters({
         { value: 'COMPLETED', label: 'Completed', color: 'text-green-600' },
         { value: 'CANCELLED', label: 'Cancelled', color: 'text-red-600' },
         { value: 'RESCHEDULED', label: 'Rescheduled', color: 'text-amber-600' },
+        { value: 'IN_QUEUE', label: 'In Queue', color: 'text-amber-600' },
     ];
 
     return (

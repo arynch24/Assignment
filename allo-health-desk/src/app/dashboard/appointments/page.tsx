@@ -57,7 +57,7 @@ export default function AppointmentsPage() {
     };
 
     const handleUpdateSuccess = (updatedAppointment: Appointment) => {
-        setAppointments(appointments.map(a => a.id === updatedAppointment.id ? updatedAppointment : a));
+        setAppointments(appointments.map(a => a.id === updatedAppointment.id ? { ...a, ...updatedAppointment } : a));
     };
 
     if (authLoading || loading) {

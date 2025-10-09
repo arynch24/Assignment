@@ -31,6 +31,7 @@ export default function AppointmentList({
             case 'COMPLETED': return 'success';
             case 'CANCELLED': return 'destructive';
             case 'RESCHEDULED': return 'warning';
+            case 'IN_QUEUE': return 'warning';
             default: return 'secondary';
         }
     };
@@ -45,10 +46,11 @@ export default function AppointmentList({
         }
     };
 
-    const handleAddingToQueue = async (appointmentId: string, doctorId: string) => {
+    const handleAddingToQueue = async (appointment: Appointment, doctorId: string) => {
         try {
-            const res = await queueApi.addAppointmentToQueue(appointmentId, doctorId);
-            toast.success(`Appointment ${appointmentId} added to queue`);
+            const res = await queueApi.addAppointmentToQueue(appointment.id, doctorId);
+            onUpdateStatus(res);
+            toast.success(`Appointment ${appointment.appointmentNumber} added to queue`);
         } catch (error: any) {
             toast.error(error.response.data.message || 'Failed to add appointment to queue');
         }
@@ -130,7 +132,7 @@ export default function AppointmentList({
                                         {
                                             label: 'Add to Queue',
                                             icon: <CheckCircle className="h-4 w-4 text-green-500" />,
-                                            onClick: () => handleAddingToQueue(appt.id, appt.doctor.id),
+                                            onClick: () => handleAddingToQueue(appt, appt.doctor.id),
                                             disabled: appt.status === 'COMPLETED' || appt.status === 'CANCELLED',
                                         },
                                         {

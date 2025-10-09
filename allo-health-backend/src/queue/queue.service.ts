@@ -5,6 +5,7 @@ import { AddAppointmentToQueueDto } from './dto/add-appointment-to-queue.dto';
 import { UpdateQueueStatusDto } from './dto/update-queue-status.dto';
 import { QueueStatus, QueuePriority, QueueType, AppointmentStatus } from 'generated/prisma';
 import { startOfDay, endOfDay } from 'date-fns';
+import { stat } from 'fs';
 
 @Injectable()
 export class QueueService {
@@ -119,17 +120,11 @@ export class QueueService {
       },
     });
 
-    console.log('patientId:', appointment.patientId);
-    console.log('doctorId:', doctorId);
-
-    console.log('Existing Queue Check:', existingQueue);
-
     if (existingQueue) {
       throw new BadRequestException('Patient is already in queue for this doctor');
     }
 
     const queueNumber = await this.generateQueueNumber(doctorId);
-    console.log('Generated Queue Number:', queueNumber);
 
     // Create queue entry with appointment reference
     const queue = await this.databaseService.queue.create({
@@ -150,7 +145,14 @@ export class QueueService {
       },
     });
 
-    return queue;
+    await this.databaseService.appointment.update({
+      where: { id: appointment.id },
+      data: { status: AppointmentStatus.IN_QUEUE },
+    });
+
+    return { 
+      id: appointment.id,
+      status: AppointmentStatus.IN_QUEUE };
   }
 
   // Get doctor's queue with intelligent sorting
