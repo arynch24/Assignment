@@ -9,9 +9,9 @@ import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface DoctorQueueCardProps {
-  doctorQueue: any;
-  searchTerm: string;
-  onUpdateStatus: (queueId: string, newStatus: 'WAITING' | 'WITH_DOCTOR' | 'COMPLETED') => void;
+    doctorQueue: any;
+    searchTerm: string;
+    onUpdateStatus: (queueId: string, newStatus: 'WAITING' | 'WITH_DOCTOR' | 'COMPLETED') => void;
 }
 
 export default function DoctorQueueCard({
@@ -90,26 +90,33 @@ export default function DoctorQueueCard({
                                         <div className="text-xs text-gray-500 mt-1">Note: {queue.notes}</div>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <Select
-                                        value={queue.status}
-                                        onValueChange={(newStatus: 'WAITING' | 'WITH_DOCTOR' | 'COMPLETED') => {
-                                            onUpdateStatus(queue.id, newStatus);
-                                        }}
-                                        disabled={queue.status === 'COMPLETED'}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="WAITING">WAITING</SelectItem>
-                                            <SelectItem value="WITH_DOCTOR">WITH DOCTOR</SelectItem>
-                                            <SelectItem value="COMPLETED">COMPLETED</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    {queue.priority === 'URGENT' && (
-                                        <Badge variant="destructive" className="text-xs">URGENT</Badge>
-                                    )}
+                                <div className="flex flex-col gap-2 items-end">
+                                    <div className='flex gap-2 items-center'>
+                                        {queue.priority === 'URGENT' && (
+                                            <Badge variant="destructive" className="text-sm rounded-xl">URGENT</Badge>
+                                        )}
+                                        <Select
+                                            value={queue.status}
+                                            onValueChange={(newStatus: 'WAITING' | 'WITH_DOCTOR' | 'COMPLETED') => {
+                                                onUpdateStatus(queue.id, newStatus);
+                                            }}
+                                            disabled={queue.status === 'COMPLETED'}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="WAITING">WAITING</SelectItem>
+                                                <SelectItem value="WITH_DOCTOR">WITH DOCTOR</SelectItem>
+                                                <SelectItem value="COMPLETED">COMPLETED</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className='flex gap-2 w-fit bg-gray-100 mt-2 px-2 py-1 rounded-full items-center'>
+                                        <span className={`px-2 py-1 rounded text-xs font-semibold`}>
+                                            {queue.type === 'WALK_IN' ? 'WALK-IN' : 'APPOINTMENT'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                             <div className="text-xs text-gray-500 mt-2">

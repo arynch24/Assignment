@@ -13,14 +13,15 @@ export class AppointmentService {
 
     const aptCount = await this.databaseService.appointment.count({
       where: {
-        appointmentDateTime: {
-          gte: startOfDay(new Date()),
-          lte: endOfDay(new Date()),
-        },
+        appointmentNumber: {
+          startsWith: `APT-${new Date().getFullYear().toString()}`
+        }
       },
     });
 
     const appointmentNumber = generateAppointmentNumber(aptCount + 1);
+
+    Logger.log(`Generated appointment number: ${appointmentNumber}`);
 
     const { patientId, doctorId, ...appointmentData } = createAppointmentDto;
 
