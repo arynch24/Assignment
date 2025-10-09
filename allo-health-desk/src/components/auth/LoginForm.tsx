@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Mail, Eye, EyeOff } from 'lucide-react';
-import {toast} from 'sonner';
+import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import axios from '@/lib/axios';
 
@@ -18,13 +18,13 @@ export function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`, {
         email,
         password,
       });
-      
+
       if (response.data) {
         localStorage.setItem('user', JSON.stringify(response.data));
         toast.success("You've been logged in successfully.");
@@ -48,7 +48,7 @@ export function LoginForm() {
         required
         startIcon={<Mail className="w-4 h-4" />}
       />
-      
+
       <Input
         label="Password"
         type={showPassword ? "text" : "password"}
@@ -71,7 +71,7 @@ export function LoginForm() {
           </button>
         }
       />
-      
+
       <Button
         type="submit"
         className="w-full"
@@ -79,7 +79,15 @@ export function LoginForm() {
       >
         Sign In
       </Button>
-      
+
+      <div className=' bg-purple-50 p-4 rounded'>
+        <h3 className="font-semibold mb-1">Demo Credentials:</h3>
+        <ul className="list-disc list-inside text-sm text-gray-600">
+          <li>Email: allohealth@gmail.com</li>
+          <li>Password: Qwerty#123</li>
+        </ul>
+      </div>
+
       <div className="text-center text-sm text-gray-600">
         Don't have an account?{' '}
         <button
