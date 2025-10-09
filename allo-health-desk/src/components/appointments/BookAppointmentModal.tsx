@@ -111,7 +111,7 @@ export default function BookAppointmentModal({
 
         try {
             setLoading(true);
-            const appointmentDateTime = `${selectedDate.toISOString().split('T')[0]}T${selectedSlot.start}+05:30`; 
+            const appointmentDateTime = `${selectedDate.toISOString().split('T')[0]}T${selectedSlot.start}+05:30`;
             const newAppointment = await appointmentApi.createAppointment({
                 patientId: selectedPatient.id,
                 doctorId: selectedDoctor.id,
@@ -120,6 +120,9 @@ export default function BookAppointmentModal({
                 notes,
             });
             onBookSuccess(newAppointment);
+            setStep('select-patient');
+            setSelectedPatient(null);
+            setSelectedDoctor(null);
             onClose();
             toast.success('Appointment booked successfully');
         } catch (err) {
@@ -154,7 +157,12 @@ export default function BookAppointmentModal({
                             </SelectContent>
                         </Select>
                         <div className="flex gap-2">
-                            <Button variant="outline" onClick={() => setStep('create-patient')}>
+                            <Button variant="outline" onClick={() => {
+                                setSelectedPatient(null);
+                                setSelectedDoctor(null);
+                                setStep('create-patient');
+                            }}
+                            >
                                 + Create New Patient
                             </Button>
                             <Button
@@ -205,15 +213,17 @@ export default function BookAppointmentModal({
                             value={selectedPatient?.email || ''}
                             onChange={(e) => setSelectedPatient(prev => ({ ...prev!, email: e.target.value }))}
                         />
-                        <Button
-                            disabled={creatingPatient}
-                            onClick={handleCreatePatient}
-                        >
-                            {creatingPatient ? 'Creating...' : 'Create Patient'}
-                        </Button>
-                        <Button variant="ghost" onClick={() => setStep('select-patient')}>
-                            Back
-                        </Button>
+                        <div className='flex gap-2'>
+                            <Button
+                                disabled={creatingPatient}
+                                onClick={handleCreatePatient}
+                            >
+                                {creatingPatient ? 'Creating...' : 'Create Patient'}
+                            </Button>
+                            <Button variant="ghost" onClick={() => setStep('select-patient')}>
+                                Back
+                            </Button>
+                        </div>
                     </div>
                 );
 
@@ -255,7 +265,7 @@ export default function BookAppointmentModal({
 
             case 'select-slot':
                 return (
-                    <div className="space-y-4">
+                    <div className="space-y-4 ">
                         <Label>Select Date</Label>
                         <div className="flex items-center gap-2">
                             <div className="relative flex-1">
@@ -275,23 +285,32 @@ export default function BookAppointmentModal({
                             </div>
                         ) : (
                             <>
-                                <Label>Select Slot</Label>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                    {availableSlots.map((slot, index) => (
-                                        <Button
-                                            key={index}
-                                            variant={selectedSlot === slot ? 'default' : 'outline'}
-                                            onClick={() => setSelectedSlot(slot)}
-                                            disabled={!slot.isAvailable}
-                                            className="h-auto py-3"
-                                        >
-                                            <div className="text-sm">
-                                                {slot.start} - {slot.end}
-                                                {!slot.isAvailable && <span className="ml-1 text-red-500">Unavailable</span>}
+                                {
+                                    availableSlots.length === 0 ? (
+                                        <div className=" bg-gray-50/30 border-1 p-4 rounded-sm text-center">
+                                            <p className="text-red-500">No available slots for the selected date. Please choose another date.</p>
+                                        </div>
+                                    ) :
+                                        <>
+                                            <Label>Select Slot</Label>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 h-64 overflow-y-auto mb-4">
+                                                {availableSlots.map((slot, index) => (
+                                                    <Button
+                                                        key={index}
+                                                        variant={selectedSlot === slot ? 'default' : 'outline'}
+                                                        onClick={() => setSelectedSlot(slot)}
+                                                        disabled={!slot.isAvailable}
+                                                        className="h-auto py-3"
+                                                    >
+                                                        <div className="text-sm">
+                                                            {slot.start} - {slot.end}
+                                                            {!slot.isAvailable && <span className="ml-1 text-red-500">Unavailable</span>}
+                                                        </div>
+                                                    </Button>
+                                                ))}
                                             </div>
-                                        </Button>
-                                    ))}
-                                </div>
+                                        </>
+                                }
                             </>
                         )}
 
@@ -321,7 +340,7 @@ export default function BookAppointmentModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="min-w-[600px] ">
                 <DialogHeader>
                     <DialogTitle>Book New Appointment</DialogTitle>
                 </DialogHeader>

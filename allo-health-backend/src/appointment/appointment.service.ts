@@ -71,7 +71,7 @@ export class AppointmentService {
 
     const where: any = {};
 
-    where.createdAt = {
+    where.appointmentDateTime = {
       gte: startOfDay(filterDate),
       lte: endOfDay(filterDate),
     };

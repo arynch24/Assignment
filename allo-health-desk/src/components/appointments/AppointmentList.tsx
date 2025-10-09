@@ -69,6 +69,15 @@ export default function AppointmentList({
                     </TableRow>
                 </TableHeader>
                 <TableBody>
+                    {
+                        appointments.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={6} className="text-center py-4">
+                                    No appointments found.
+                                </TableCell>
+                            </TableRow>
+                        )
+                    }
                     {appointments.map((appt) => (
                         <TableRow key={appt.id}>
                             <TableCell>

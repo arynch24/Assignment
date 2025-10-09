@@ -144,12 +144,6 @@ export class QueueService {
       },
     });
 
-    // Update appointment status to checked-in
-    // await this.databaseService.appointment.update({
-    //   where: { id: appointmentId },
-    //   data: { status: AppointmentStatus.CHECKED_IN },
-    // });
-
     return queue;
   }
 

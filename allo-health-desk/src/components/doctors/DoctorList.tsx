@@ -66,6 +66,14 @@ export default function DoctorList({ doctors, onDelete, onEdit }: DoctorListProp
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            {
+                doctors.length === 0 && (
+                    <div className="col-span-full text-center text-gray-500 py-10">
+                        No doctors found.
+                    </div>
+                )
+            }
             {doctors.map(doctor => {
                 const availability = doctor.todayAvailability;
                 const status = getAvailabilityStatus(availability);

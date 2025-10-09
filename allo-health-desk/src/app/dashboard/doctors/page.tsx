@@ -136,7 +136,7 @@ export default function DoctorsPage() {
                 onAddSuccess={(updatedDoctor) => {
                     if (editingDoctor) {
                         // Update existing doctor
-                        setDoctors(doctors.map(d => d.id === updatedDoctor.id ? updatedDoctor : d));
+                        setDoctors(doctors.map(d => d.id === updatedDoctor.id ? { ...d, ...updatedDoctor } : d));
                         toast.success('Doctor updated successfully');
                     } else {
                         // Add new doctor

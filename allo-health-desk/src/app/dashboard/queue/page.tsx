@@ -67,7 +67,6 @@ export default function QueuePage() {
             prev[doctorId].waitingCount += 1; // Assuming new item is WAITING
             return { ...prev };
         });
-        toast.success('Patient added to queue');
     };
 
     const handleUpdateQueueStatus = async (
