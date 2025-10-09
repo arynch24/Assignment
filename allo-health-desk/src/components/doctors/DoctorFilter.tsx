@@ -1,4 +1,3 @@
-// components/doctors/DoctorFilters.tsx
 'use client';
 
 import { Input } from '@/components/ui/input';
@@ -17,12 +16,6 @@ export enum Specialization {
   GYNECOLOGY = 'Gynecology',
   OPHTHALMOLOGY = 'Ophthalmology',
   ENT = 'ENT'
-}
-
-export enum Availability {
-  AVAILABLE = 'Available',
-  BUSY = 'Busy',
-  OFFLINE = 'Offline'
 }
 
 interface DoctorFiltersProps {
@@ -48,7 +41,7 @@ export default function DoctorFilters({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
-            placeholder="Search doctors by name..."
+            placeholder="Search by name, email, or location..."
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-10"
@@ -68,14 +61,15 @@ export default function DoctorFilters({
         </Select>
 
         <Select value={availability} onValueChange={onAvailabilityChange}>
-          <SelectTrigger className="w-full md:w-[200px]">
+          <SelectTrigger className="w-full md:w-[220px]">
             <SelectValue placeholder="All Availability" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Availability</SelectItem>
-            {Object.values(Availability).map(avail => (
-              <SelectItem key={avail} value={avail}>{avail}</SelectItem>
-            ))}
+            <SelectItem value="all">All Doctors</SelectItem>
+            <SelectItem value="available-now"> Available Now</SelectItem>
+            <SelectItem value="working-today"> Working Today</SelectItem>
+            <SelectItem value="busy"> Currently Busy</SelectItem>
+            <SelectItem value="off-today"> Off Today</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -91,14 +85,48 @@ export function filterDoctors(
   availability: string
 ) {
   return doctors.filter(d => {
+    // Search filter - expanded to include email and location
     const matchesSearch = searchTerm === '' || 
-      d.name.toLowerCase().includes(searchTerm.toLowerCase());
+      d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      d.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      d.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      d.specialization.toLowerCase().includes(searchTerm.toLowerCase());
     
+    // Specialization filter
     const matchesSpecialization = specialization === 'all' || 
       d.specialization === specialization;
     
-    const matchesAvailability = availability === 'all' || 
-      d.availability === availability;
+    // Availability filter based on todayAvailability data
+    let matchesAvailability = true;
+    
+    if (availability !== 'all' && d.todayAvailability) {
+      const avail = d.todayAvailability;
+      
+      switch (availability) {
+        case 'available-now':
+          // Currently available (working day + currently available)
+          matchesAvailability = avail.isWorkingDay && avail.isCurrentlyAvailable;
+          break;
+          
+        case 'working-today':
+          // Working today (regardless of current availability)
+          matchesAvailability = avail.isWorkingDay;
+          break;
+          
+        case 'busy':
+          // Working but currently busy
+          matchesAvailability = avail.isWorkingDay && !avail.isCurrentlyAvailable;
+          break;
+          
+        case 'off-today':
+          // Not working today
+          matchesAvailability = !avail.isWorkingDay;
+          break;
+          
+        default:
+          matchesAvailability = true;
+      }
+    }
 
     return matchesSearch && matchesSpecialization && matchesAvailability;
   });

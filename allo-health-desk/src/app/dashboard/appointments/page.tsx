@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import AppointmentFilters from '@/components/appointments/AppointmentFilters';
+import AppointmentFilters, { filterAppointments } from '@/components/appointments/AppointmentFilters';
 import AppointmentList from '@/components/appointments/AppointmentList';
 import BookAppointmentModal from '@/components/appointments/BookAppointmentModal';
 import { Appointment } from '@/types/appointment';
@@ -22,6 +22,16 @@ export default function AppointmentsPage() {
     const [isBookModalOpen, setIsBookModalOpen] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
     const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [doctorId, setDoctorId] = useState('all');
+    const [status, setStatus] = useState('all');
+
+    const filteredAppointments = filterAppointments(
+        appointments,
+        searchTerm,
+        doctorId,
+        status
+    );
 
     const fetchAppointments = async () => {
         try {
@@ -88,8 +98,8 @@ export default function AppointmentsPage() {
                             <CalendarIcon className="h-5 w-5 text-blue-600" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold">127</p>
-                            <p className="text-sm text-gray-500">This Week</p>
+                            <p className="text-2xl font-bold">{appointments.filter(a => a.status === 'COMPLETED').length}</p>
+                            <p className="text-sm text-gray-500">Appointments Completed</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -99,8 +109,8 @@ export default function AppointmentsPage() {
                             <CalendarIcon className="h-5 w-5 text-yellow-600" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold">12</p>
-                            <p className="text-sm text-gray-500">Pending</p>
+                            <p className="text-2xl font-bold">{appointments.filter(a => a.status === 'BOOKED').length}</p>
+                            <p className="text-sm text-gray-500">Pending Appointments</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -109,12 +119,16 @@ export default function AppointmentsPage() {
             <AppointmentFilters
                 selectedDate={selectedDate}
                 onDateChange={setSelectedDate}
-                onFilterChange={(filtered) => setAppointments(filtered)}
-                appointments={appointments}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                doctorId={doctorId}
+                onDoctorChange={setDoctorId}
+                status={status}
+                onStatusChange={setStatus}
             />
 
             <AppointmentList
-                appointments={appointments}
+                appointments={filteredAppointments}
                 onUpdateStatus={handleUpdateSuccess}
                 onDelete={handleDeleteSuccess}
                 onReschedule={(appointment) => {
@@ -122,7 +136,7 @@ export default function AppointmentsPage() {
                     setIsRescheduleModalOpen(true);
                 }}
             />
-        
+
             <RescheduleAppointmentModal
                 isOpen={isRescheduleModalOpen}
                 onClose={() => setIsRescheduleModalOpen(false)}
