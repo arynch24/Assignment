@@ -96,6 +96,7 @@ export default function DoctorQueueCard({
                                         onValueChange={(newStatus: 'WAITING' | 'WITH_DOCTOR' | 'COMPLETED') => {
                                             onUpdateStatus(queue.id, newStatus);
                                         }}
+                                        disabled={queue.status === 'COMPLETED'}
                                     >
                                         <SelectTrigger>
                                             <SelectValue />

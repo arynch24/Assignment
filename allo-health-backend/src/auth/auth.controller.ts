@@ -57,4 +57,10 @@ export class AuthController {
     async getUser(@Request() req) {
         return this.authService.findUserById(req.user.userId);
     }
+
+    @UseGuards(AuthGuard('jwt'))
+    @Get('dashboard-stats')
+    async getDashboardStats() {
+        return this.authService.dashboardStats();
+    }
 }

@@ -53,19 +53,26 @@ export default function QueuePage() {
     );
 
     const handleAddSuccess = (newQueueItem: any) => {
-        // Add to the correct doctor's queue
         setQueues(prev => {
             const doctorId = newQueueItem.doctorId;
-            if (!prev[doctorId]) {
-                prev[doctorId] = {
+            const updated = { ...prev };
+
+            if (!updated[doctorId]) {
+                updated[doctorId] = {
                     doctor: newQueueItem.doctor,
                     waitingCount: 0,
                     queues: [],
                 };
             }
-            prev[doctorId].queues.push(newQueueItem);
-            prev[doctorId].waitingCount += 1; // Assuming new item is WAITING
-            return { ...prev };
+
+            // Create a new doctor queue object with updated values
+            updated[doctorId] = {
+                ...updated[doctorId],
+                queues: [...updated[doctorId].queues, newQueueItem],
+                waitingCount: updated[doctorId].waitingCount + 1,
+            };
+
+            return updated;
         });
     };
 
@@ -98,8 +105,8 @@ export default function QueuePage() {
             });
 
             toast.success('Queue status updated');
-        } catch (err) {
-            toast.error('Failed to update status');
+        } catch (err: any) {
+            toast.error('Failed to update queue status');
         }
     };
 

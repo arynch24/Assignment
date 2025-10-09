@@ -5,6 +5,7 @@ import { hash, compare } from 'bcrypt';
 import { ConflictException } from '@nestjs/common';
 import { LoginUserDto } from './dto/login-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
+import { startOfDay, endOfDay } from 'date-fns';
 
 /**
  * Service for handling authentication-related operations such as user signup and login.
@@ -66,9 +67,11 @@ export class AuthService {
         // Generate JWT token
         const token = this.jwtService.sign({ sub: user.id, email: user.email });
 
-        return { token, user: {
-            id: user.id, name: user.name, email: user.email
-        } };
+        return {
+            token, user: {
+                id: user.id, name: user.name, email: user.email
+            }
+        };
     }
 
     async findUserById(userId: string) {
@@ -76,10 +79,53 @@ export class AuthService {
             where: { id: userId },
             select: { id: true, name: true, email: true }
         });
-        
+
         if (!user) {
             throw new NotFoundException('User not found');
         }
         return user;
+    }
+
+    async dashboardStats() {
+        const today = new Date();
+        const totalPatients = await this.databaseService.patient.count();
+
+        const totaltodayQueues = await this.databaseService.queue.count({
+            where: {
+                createdAt: {
+                    gte: startOfDay(today),
+                    lte: endOfDay(today)
+                },
+                status: {
+                    in: ['WAITING', 'WITH_DOCTOR']
+                }
+            }
+        });
+
+        const totalAppointments = await this.databaseService.appointment.count({
+            where: {
+                appointmentDateTime: {
+                    gte: startOfDay(today),
+                    lte: endOfDay(today)
+                }
+            }
+        });
+
+        const totalCompletedConsultations = await this.databaseService.queue.count({
+            where: {
+                createdAt: {
+                    gte: startOfDay(today),
+                    lte: endOfDay(today)
+                },
+                status: 'COMPLETED'
+            }
+        });
+
+        return {
+            totalPatients,
+            totalAppointments,
+            totaltodayQueues,
+            totalCompletedConsultations
+        };
     }
 }
