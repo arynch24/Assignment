@@ -25,7 +25,7 @@ export class QueueService {
 
     const queueNum = (count + 1).toString().padStart(3, '0');
     const dateStr = today.toISOString().split('T')[0].replace(/-/g, '');
-    return `Q-${dateStr}-${queueNum}`;
+    return `Q-${doctorId.slice(0, 8)}-${dateStr}-${queueNum}`;
   }
 
   // Add walk-in patient to queue
@@ -406,7 +406,7 @@ export class QueueService {
       return a.createdAt.getTime() - b.createdAt.getTime();
     });
   }
-  
+
   // Update queue status
   async updateQueueStatus(queueId: string, dto: UpdateQueueStatusDto) {
     const queue = await this.databaseService.queue.findUnique({
