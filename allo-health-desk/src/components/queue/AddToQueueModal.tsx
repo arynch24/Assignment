@@ -99,8 +99,8 @@ export default function AddToQueueModal({
       onAddSuccess(newQueueItem);
       onClose();
       toast.success('Patient added to queue');
-    } catch (err) {
-      toast.error('Failed to add patient to queue');
+    } catch (error: any) {
+      toast.error(error.response.data.message ||'Failed to add patient to queue');
     } finally {
       setLoading(false);
     }

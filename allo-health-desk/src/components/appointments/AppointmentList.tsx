@@ -16,25 +16,14 @@ import { queueApi } from '@/lib/api/queueApi';
 interface AppointmentListProps {
     appointments: Appointment[];
     onUpdateStatus: (appointment: Appointment) => void;
-    onDelete: (id: string) => void;
     onReschedule: (appointment: Appointment) => void;
 }
 
 export default function AppointmentList({
     appointments,
     onUpdateStatus,
-    onDelete,
     onReschedule,
 }: AppointmentListProps) {
-    const [deleteModal, setDeleteModal] = useState<{
-        isOpen: boolean;
-        appointmentId: string | null;
-        appointmentNumber: string;
-    }>({
-        isOpen: false,
-        appointmentId: null,
-        appointmentNumber: ''
-    });
 
     const getStatusBadgeVariant = (status: string) => {
         switch (status) {
@@ -51,17 +40,17 @@ export default function AppointmentList({
             const updatedAppointment = await appointmentApi.updateAppointment(appointment.id, { status: appointment.status });
             onUpdateStatus(updatedAppointment);
             toast.success(`Appointment ${appointment.appointmentNumber} marked as ${appointment.status}`);
-        } catch (error) {
-            toast.error('Failed to update appointment status');
+        } catch (error: any) {
+            toast.error(error.response.data.message || 'Failed to update appointment status');
         }
     };
 
     const handleAddingToQueue = async (appointmentId: string, doctorId: string) => {
         try {
-            const res=await queueApi.addAppointmentToQueue(appointmentId, doctorId);
+            const res = await queueApi.addAppointmentToQueue(appointmentId, doctorId);
             toast.success(`Appointment ${appointmentId} added to queue`);
-        } catch (error) {
-            toast.error('Failed to add appointment to queue');
+        } catch (error: any) {
+            toast.error(error.response.data.message || 'Failed to add appointment to queue');
         }
     };
 

@@ -60,10 +60,6 @@ export default function AppointmentsPage() {
         setAppointments(appointments.map(a => a.id === updatedAppointment.id ? updatedAppointment : a));
     };
 
-    const handleDeleteSuccess = (id: string) => {
-        setAppointments(appointments.filter(a => a.id !== id));
-    };
-
     if (authLoading || loading) {
         return <Loader text="Loading appointments..." />;
     }
@@ -130,7 +126,6 @@ export default function AppointmentsPage() {
             <AppointmentList
                 appointments={filteredAppointments}
                 onUpdateStatus={handleUpdateSuccess}
-                onDelete={handleDeleteSuccess}
                 onReschedule={(appointment) => {
                     setSelectedAppointment(appointment);
                     setIsRescheduleModalOpen(true);

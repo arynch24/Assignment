@@ -94,8 +94,8 @@ export default function RescheduleAppointmentModal({
             onRescheduleSuccess(updatedAppointment);
             onClose();
             toast.success('Appointment rescheduled successfully');
-        } catch (err) {
-            toast.error('Failed to reschedule appointment');
+        } catch (error: any) {
+            toast.error(error.response.data.message || 'Failed to reschedule appointment');
         } finally {
             setLoading(false);
         }
