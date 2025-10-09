@@ -25,7 +25,7 @@ export class QueueService {
 
     const queueNum = (count + 1).toString().padStart(3, '0');
     const dateStr = today.toISOString().split('T')[0].replace(/-/g, '');
-    return `Q-${doctorId.slice(0, 8)}-${dateStr}-${queueNum}`;
+    return `Q-${dateStr}-${queueNum}`;
   }
 
   // Add walk-in patient to queue
@@ -119,11 +119,17 @@ export class QueueService {
       },
     });
 
+    console.log('patientId:', appointment.patientId);
+    console.log('doctorId:', doctorId);
+
+    console.log('Existing Queue Check:', existingQueue);
+
     if (existingQueue) {
       throw new BadRequestException('Patient is already in queue for this doctor');
     }
 
     const queueNumber = await this.generateQueueNumber(doctorId);
+    console.log('Generated Queue Number:', queueNumber);
 
     // Create queue entry with appointment reference
     const queue = await this.databaseService.queue.create({
@@ -305,6 +311,14 @@ export class QueueService {
             name: true,
             specialization: true,
             gender: true,
+          }
+        },
+        appointment: {
+          select: {
+            id: true,
+            appointmentNumber: true,
+            appointmentDateTime: true,
+            status: true,
           }
         }
       }

@@ -89,6 +89,9 @@ export default function DoctorQueueCard({
                                     {queue.notes && (
                                         <div className="text-xs text-gray-500 mt-1">Note: {queue.notes}</div>
                                     )}
+                                    {queue.appointment && (
+                                        <div className="text-xs text-blue-500 mt-1">Appointment Time: {format(queue.appointment.appointmentDateTime, 'hh:mm a')}</div>
+                                    )}
                                 </div>
                                 <div className="flex flex-col gap-2 items-end">
                                     <div className='flex gap-2 items-center'>
@@ -123,7 +126,7 @@ export default function DoctorQueueCard({
                                 Assigned to: {queue.doctor.name}
                             </div>
                             <div className="text-xs text-gray-500 mt-1">
-                                Added: {format(new Date(queue.createdAt), 'hh:mm a')}
+                                Added at: {format(new Date(queue.createdAt), 'hh:mm a')}
                             </div>
                             {queue.startedAt && (
                                 <div className="text-xs text-blue-500 mt-1">

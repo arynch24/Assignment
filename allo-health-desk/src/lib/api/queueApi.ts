@@ -1,5 +1,6 @@
 import axios from '../axios';
 import { CreateQueueDto, QueueItem, QueueResponse, UpdatedQueueItem } from '../../types/queue';
+import { add } from 'date-fns';
 
 export const queueApi = {
     getQueuesByDate: async (date: string): Promise<QueueResponse> => {
@@ -22,4 +23,9 @@ export const queueApi = {
         const res = await axios.post('/queue/walk-in', data);
         return res.data;
     },
+
+    addAppointmentToQueue: async (appointmentId: string, doctorId: string) => {
+        const res = await axios.post('/queue/appointment', { appointmentId, doctorId });
+        return res.data;
+    }
 };

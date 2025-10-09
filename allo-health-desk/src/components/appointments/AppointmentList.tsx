@@ -11,6 +11,7 @@ import { useState } from 'react';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import { appointmentApi } from '@/lib/api/appointmentApi';
 import { Appointment } from '@/types/appointment';
+import { queueApi } from '@/lib/api/queueApi';
 
 interface AppointmentListProps {
     appointments: Appointment[];
@@ -52,6 +53,15 @@ export default function AppointmentList({
             toast.success(`Appointment ${appointment.appointmentNumber} marked as ${appointment.status}`);
         } catch (error) {
             toast.error('Failed to update appointment status');
+        }
+    };
+
+    const handleAddingToQueue = async (appointmentId: string, doctorId: string) => {
+        try {
+            const res=await queueApi.addAppointmentToQueue(appointmentId, doctorId);
+            toast.success(`Appointment ${appointmentId} added to queue`);
+        } catch (error) {
+            toast.error('Failed to add appointment to queue');
         }
     };
 
@@ -129,9 +139,9 @@ export default function AppointmentList({
                                             disabled: appt.status === 'COMPLETED' || appt.status === 'CANCELLED',
                                         },
                                         {
-                                            label: 'Complete',
+                                            label: 'Add to Queue',
                                             icon: <CheckCircle className="h-4 w-4 text-green-500" />,
-                                            onClick: () => handleUpdateStatus({ ...appt, status: 'COMPLETED' }),
+                                            onClick: () => handleAddingToQueue(appt.id, appt.doctor.id),
                                             disabled: appt.status === 'COMPLETED' || appt.status === 'CANCELLED',
                                         },
                                         {
