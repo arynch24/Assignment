@@ -31,25 +31,7 @@ export default function DoctorQueueCard({
     const shouldShow = searchTerm === '' || filteredQueues.length > 0;
 
     if (!shouldShow) return null;
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'WAITING': return 'bg-yellow-100 text-yellow-800';
-            case 'WITH_DOCTOR': return 'bg-blue-100 text-blue-800';
-            case 'COMPLETED': return 'bg-green-100 text-green-800';
-            default: return 'bg-gray-100 text-gray-800';
-        }
-    };
-
-    const getStatusLabel = (status: string) => {
-        switch (status) {
-            case 'WAITING': return 'WAITING';
-            case 'WITH_DOCTOR': return 'WITH DOCTOR';
-            case 'COMPLETED': return 'COMPLETED';
-            default: return status;
-        }
-    };
-
+    
     return (
         <Card className="hover:shadow-lg transition-shadow">
             <CardHeader className="flex justify-between items-center cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>

@@ -53,6 +53,18 @@ export default function DoctorsPage() {
         }
     };
 
+    const handleAddingDoctor = (updatedDoctor: any) => {
+        if (editingDoctor) {
+            // Update existing doctor
+            setDoctors(doctors.map(d => d.id === updatedDoctor.id ? { ...d, ...updatedDoctor } : d));
+            toast.success('Doctor updated successfully');
+        } else {
+            // Add new doctor
+            setDoctors([...doctors, updatedDoctor]);
+            toast.success('Doctor added successfully');
+        }
+    }
+
     if (authLoading || loading) {
         return <Loader text="Loading doctors..." />;
     }
@@ -133,17 +145,7 @@ export default function DoctorsPage() {
                     setIsAddModalOpen(false);
                 }}
                 editingDoctor={editingDoctor}
-                onAddSuccess={(updatedDoctor) => {
-                    if (editingDoctor) {
-                        // Update existing doctor
-                        setDoctors(doctors.map(d => d.id === updatedDoctor.id ? { ...d, ...updatedDoctor } : d));
-                        toast.success('Doctor updated successfully');
-                    } else {
-                        // Add new doctor
-                        setDoctors([...doctors, updatedDoctor]);
-                        toast.success('Doctor added successfully');
-                    }
-                }}
+                onAddSuccess={handleAddingDoctor}
             />
 
         </div>

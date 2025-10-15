@@ -7,8 +7,6 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import ActionMenu from '@/components/ActionMenu';
 import { X, CheckCircle, Calendar } from 'lucide-react';
-import { useState } from 'react';
-import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import { appointmentApi } from '@/lib/api/appointmentApi';
 import { Appointment } from '@/types/appointment';
 import { queueApi } from '@/lib/api/queueApi';
