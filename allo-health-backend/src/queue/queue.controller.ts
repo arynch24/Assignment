@@ -41,31 +41,6 @@ export class QueueController {
     return this.queueService.getAllQueues(status, date);
   }
 
-  // Get specific doctor's queue
-  @Get('doctor/:doctorId')
-  async getDoctorQueue(
-    @Param('doctorId') doctorId: string,
-    @Query('status') status?: QueueStatus,
-    @Query('date') date?: string, // Format: YYYY-MM-DD
-  ) {
-    return this.queueService.getDoctorQueue(doctorId, status, date);
-  }
-
-  // Get doctor's queue statistics
-  @Get('doctor/:doctorId/stats')
-  async getDoctorQueueStats(
-    @Param('doctorId') doctorId: string,
-    @Query('date') date?: string, // Format: YYYY-MM-DD
-  ) {
-    return this.queueService.getDoctorQueueStats(doctorId, date);
-  }
-
-  // Call next patient for a doctor
-  @Post('doctor/:doctorId/next')
-  callNextPatient(@Param('doctorId') doctorId: string) {
-    return this.queueService.callNextPatient(doctorId);
-  }
-
   // Update queue status
   @Patch(':queueId/status')
   updateQueueStatus(
@@ -79,14 +54,5 @@ export class QueueController {
   @Delete(':queueId')
   removeFromQueue(@Param('queueId') queueId: string) {
     return this.queueService.removeFromQueue(queueId);
-  }
-
-  // Get all doctors with their queue counts
-  @Get('doctors/queue-count')
-  async getAllDoctorsWithQueueCount(
-    @Query('status') status?: QueueStatus,
-    @Query('date') date?: string, // Format: YYYY-MM-DD
-  ) {
-    return this.queueService.getAllDoctorsWithQueueCount(status, date);
   }
 }
