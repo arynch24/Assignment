@@ -35,7 +35,7 @@ export class DoctorService {
 
     // Get today's date in ISO format
     const today = new Date().toLocaleDateString('en-CA');
-    
+
     try {
       const availability = await this.getDoctorAvailability(doctor.id, today);
       return {
@@ -159,11 +159,36 @@ export class DoctorService {
     );
   }
 
-  remove(id: string) {
+  async remove(id: string) {
+
+    const checkDoctorAppointments = await this.databaseService.appointment.findMany({
+      where: {
+        doctorId: id,
+        status: {
+          in: ['BOOKED', 'RESCHEDULED', 'IN_QUEUE']
+        }
+      }
+    });
+
+    const checkDoctorQueue = await this.databaseService.queue.findMany({
+      where: {
+        doctorId: id,
+        status: {
+          in: ['WAITING', 'WAITING', 'WITH_DOCTOR',]
+        }
+      }
+    });
+
+    if (checkDoctorAppointments.length > 0 || checkDoctorQueue.length > 0) {
+      throw new NotFoundException(`Doctor with ID ${id} has active appointments or is in queue`);
+    }
+
+
     return this.databaseService.doctor.delete({
       where: { id }
     });
   }
+
   async getDoctorAvailability(
     doctorId: string,
     dateString: string,

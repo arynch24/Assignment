@@ -48,8 +48,8 @@ export default function DoctorsPage() {
             await doctorApi.deleteDoctor(id);
             setDoctors(doctors.filter(d => d.id !== id));
             toast.success('Doctor deleted successfully');
-        } catch (err) {
-            toast.error('Failed to delete doctor');
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'Failed to delete doctor');
         }
     };
 
