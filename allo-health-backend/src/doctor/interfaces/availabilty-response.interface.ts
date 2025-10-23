@@ -3,12 +3,13 @@ export interface TimeSlot {
   end: string;
   isAvailable: boolean;
   appointmentId?: string;
+  unavailableReason: 'PAST' | 'BREAK' | 'APPOINTMENT' | null;
 }
 
 export interface BreakInfo {
   start: string;
   end: string;
-  type: 'lunch' | 'break' | 'meeting';
+  type: 'LUNCH' | 'BREAK' | 'MEETING';
 }
 
 export interface BookedAppointment {

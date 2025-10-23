@@ -240,7 +240,9 @@ export class DoctorService {
           gte: startOfDay,
           lte: endOfDay,
         },
-        status: 'BOOKED',
+        status: {
+          in: ['BOOKED', 'IN_QUEUE', 'RESCHEDULED'],
+        },
       },
       include: {
         patient: true,
@@ -266,6 +268,7 @@ export class DoctorService {
       doctor.consultationDuration || 30,
       breaks,
       appointments,
+      targetDate,
     );
 
     // 9. Find next available slot
@@ -291,7 +294,7 @@ export class DoctorService {
       breaks: breaks.map(b => ({
         start: b.startTime,
         end: b.endTime,
-        type: b.breakType as 'lunch' | 'break' | 'meeting',
+        type: b.breakType,
       })),
       currentQueueCount: queueCount,
       estimatedQueueWaitTime,

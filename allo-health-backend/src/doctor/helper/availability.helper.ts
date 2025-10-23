@@ -64,16 +64,28 @@ export class AvailabilityHelper {
         duration: number,
         breaks: DoctorBreak[],
         appointments: Appointment[],
+        targetDate: Date,
     ): TimeSlot[] {
         const slots: TimeSlot[] = [];
         const start = this.timeToMinutes(startTime);
         const end = this.timeToMinutes(endTime);
+
+        // Check if the date is today and get current time in minutes
+        const now = new Date();
+        const isToday = targetDate.toDateString() === now.toDateString();
+        const isPastDate = targetDate < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
         let currentTime = start;
 
         while (currentTime + duration <= end) {
             const slotStart = this.minutesToTime(currentTime);
             const slotEnd = this.minutesToTime(currentTime + duration);
+
+            // Check if slot is in the past
+            // - If date is in the past, all slots are past
+            // - If date is today, check if slot time is before current time
+            const isPastTime = isPastDate || (isToday && currentTime < currentMinutes);
 
             // Check if slot overlaps with break
             const isBreakTime = breaks.some(b =>
@@ -89,11 +101,22 @@ export class AvailabilityHelper {
                 return this.isTimeOverlap(slotStart, slotEnd, aptStartTime, aptEndTime);
             });
 
+            // Determine unavailability reason
+            let unavailableReason: 'PAST' | 'BREAK' | 'APPOINTMENT' | null = null;
+            if (isPastTime) {
+                unavailableReason = 'PAST';
+            } else if (isBreakTime) {
+                unavailableReason = 'BREAK';
+            } else if (bookedAppointment) {
+                unavailableReason = 'APPOINTMENT';
+            }
+
             slots.push({
                 start: slotStart,
                 end: slotEnd,
-                isAvailable: !isBreakTime && !bookedAppointment,
+                isAvailable: !isPastTime && !isBreakTime && !bookedAppointment,
                 appointmentId: bookedAppointment?.id,
+                unavailableReason, // Add reason tag
             });
 
             currentTime += duration;

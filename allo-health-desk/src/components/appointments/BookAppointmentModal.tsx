@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Badge, Calendar as CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { appointmentApi } from '@/lib/api/appointmentApi';
@@ -304,7 +304,8 @@ export default function BookAppointmentModal({
                                                     >
                                                         <div className="text-sm">
                                                             {slot.start} - {slot.end}
-                                                            {!slot.isAvailable && <span className="ml-1 text-red-500">Unavailable</span>}
+                                                            <br/>
+                                                            {!slot.isAvailable && <span className="ml-1 text-red-500">{slot.unavailableReason}</span>}
                                                         </div>
                                                     </Button>
                                                 ))}
