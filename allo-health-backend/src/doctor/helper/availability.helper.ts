@@ -145,16 +145,20 @@ export class AvailabilityHelper {
         const now = new Date();
         const checkDate = new Date(dateString);
 
-        // Check if the date is today
+        // Get IST date components
+        const istDateStr = now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+        const istDate = new Date(istDateStr);
+
+        // Check if the date is today (in IST)
         if (
-            now.getFullYear() !== checkDate.getFullYear() ||
-            now.getMonth() !== checkDate.getMonth() ||
-            now.getDate() !== checkDate.getDate()
+            istDate.getFullYear() !== checkDate.getFullYear() ||
+            istDate.getMonth() !== checkDate.getMonth() ||
+            istDate.getDate() !== checkDate.getDate()
         ) {
             return false;
         }
 
-        const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:00`;
+        const currentTime = `${istDate.getHours().toString().padStart(2, '0')}:${istDate.getMinutes().toString().padStart(2, '0')}:00`;
         const currentMinutes = this.timeToMinutes(currentTime);
         const workStart = this.timeToMinutes(schedule.startTime);
         const workEnd = this.timeToMinutes(schedule.endTime);
