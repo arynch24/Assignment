@@ -57,12 +57,30 @@ export default function DoctorList({ doctors, onDelete, onEdit }: DoctorListProp
         }
         return {
             icon: <AlertCircle className="h-5 w-5" />,
-            text: "Currently Busy",
+            text: "Unavailable Now",
             color: "text-amber-600",
             bgColor: "bg-amber-50",
             borderColor: "border-amber-200"
         };
     };
+
+    const handleUpdateSchedule = async (doctorId: string, schedules: any[]) => {
+        try {
+            await doctorApi.updateSchedules(doctorId, schedules);
+            toast.success('Schedule updated');
+        } catch (err) {
+            toast.error('Failed to update schedule');
+        }
+    };
+
+    const handleUpdateBreaks = async (doctorId: string, breaks: any[]) => {
+        try {
+            await doctorApi.updateBreaks(doctorId, breaks);
+            toast.success('Breaks updated');
+        } catch (err) {
+            toast.error('Failed to update breaks');
+        }
+    }
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -199,22 +217,8 @@ export default function DoctorList({ doctors, onDelete, onEdit }: DoctorListProp
                     isOpen={isScheduleModalOpen}
                     onClose={() => setIsScheduleModalOpen(false)}
                     doctorId={selectedDoctorId}
-                    onUpdateSchedule={async (schedules) => {
-                        try {
-                            await doctorApi.updateSchedules(selectedDoctorId, schedules);
-                            toast.success('Schedule updated');
-                        } catch (err) {
-                            toast.error('Failed to update schedule');
-                        }
-                    }}
-                    onUpdateBreaks={async (breaks) => {
-                        try {
-                            await doctorApi.updateBreaks(selectedDoctorId, breaks);
-                            toast.success('Breaks updated');
-                        } catch (err) {
-                            toast.error('Failed to update breaks');
-                        }
-                    }}
+                    onUpdateSchedule={(schedules) => handleUpdateSchedule(selectedDoctorId, schedules)}
+                    onUpdateBreaks={(breaks) => handleUpdateBreaks(selectedDoctorId, breaks)}
                 />
             )}
 
