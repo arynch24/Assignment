@@ -13,8 +13,9 @@ export class AppointmentService {
 
     const aptCount = await this.databaseService.appointment.count({
       where: {
-        appointmentNumber: {
-          startsWith: `APT-${new Date().getFullYear().toString()}`
+        createdAt: {
+          gte: startOfDay(new Date()),
+          lte: endOfDay(new Date()),
         }
       },
     });
