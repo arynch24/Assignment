@@ -10,25 +10,27 @@ export class AppointmentService {
   constructor(private readonly databaseService: DatabaseService) { }
 
   async create(createAppointmentDto: CreateAppointmentDto, userId: string) {
+    const { patientId, doctorId, appointmentDateTime, ...appointmentData } = createAppointmentDto;
+
+    // Use the appointment date for counting and number generation
+    const appointmentDate = new Date(appointmentDateTime);
 
     const aptCount = await this.databaseService.appointment.count({
       where: {
-        createdAt: {
-          gte: startOfDay(new Date()),
-          lte: endOfDay(new Date()),
+        appointmentDateTime: {
+          gte: startOfDay(appointmentDate),
+          lte: endOfDay(appointmentDate),
         }
       },
     });
 
-    const appointmentNumber = generateAppointmentNumber(aptCount + 1);
+    const appointmentNumber = generateAppointmentNumber(aptCount + 1, appointmentDate);
 
     Logger.log(`Generated appointment number: ${appointmentNumber}`);
 
-    const { patientId, doctorId, ...appointmentData } = createAppointmentDto;
-
     return this.databaseService.appointment.create({
       data: {
-        appointmentDateTime: appointmentData.appointmentDateTime,
+        appointmentDateTime,
         duration: appointmentData.duration,
         notes: appointmentData.notes,
         appointmentNumber,
@@ -41,7 +43,8 @@ export class AppointmentService {
         bookedByUser: {
           connect: { id: userId }
         }
-      }, select: {
+      },
+      select: {
         id: true,
         appointmentNumber: true,
         appointmentDateTime: true,
