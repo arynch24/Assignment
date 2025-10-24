@@ -71,10 +71,12 @@ export class AvailabilityHelper {
         const end = this.timeToMinutes(endTime);
 
         // Check if the date is today and get current time in minutes
-        const now = new Date();
-        const isToday = targetDate.toDateString() === now.toDateString();
-        const isPastDate = targetDate < new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const now = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+        const localNow = new Date(now);
+
+        const isToday = targetDate.toDateString() === localNow.toDateString();
+        const isPastDate = targetDate < new Date(localNow.getFullYear(), localNow.getMonth(), localNow.getDate());
+        const currentMinutes = localNow.getHours() * 60 + localNow.getMinutes();
 
         let currentTime = start;
 
